@@ -21,6 +21,22 @@ body {
     background-color: rgba(0, 0, 0, 0.1);
     box-shadow: inset 0px 0px 15px  rgba(0, 0, 0, 0.6);
     border-style: none;
+}
+section {
+    margin: 15vh 5vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  
+    scroll-snap-align: center;
+}
+
+#panelButton {
+    background-color: rgba(0, 0, 0, 0.301);
+    border-color: rgba(0, 0, 0, 0.301);
+    border-width: 5px;
     border-radius: 50%;
     height: 60px;
     width: 60px;
@@ -37,6 +53,9 @@ body {
 }
 .navButton>* {
     margin: 5px;
+}
+#panelButton > img {
+    margin: 0;
     padding: 0;
     width: 40px;
     height: 40px;
@@ -74,7 +93,17 @@ body {
 }
 
 .page-container {
-    margin-top: 75px;
+    margin-top: 100px;
+}
+
+h1 {
+    color: gray;
+    font-size: 3em;
+}
+
+p {
+    color: gray;
+    font-size: 1.25em;
 }
 
 .modal {
@@ -140,3 +169,15 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.671);
     box-shadow: inset 0px 0px 15px  rgba(255, 255, 255, 0.3);
 }
+#signInBtn, #makeAcctBtn {
+    color: red;
+    font-size: 1.25em;
+}
+
+#homeDropdown {
+    position: absolute;
+    /* right: 100px; */
+    
+
+}
+
