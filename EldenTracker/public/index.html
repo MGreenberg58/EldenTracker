@@ -7,43 +7,35 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
   <link rel="stylesheet" href="styles/main.css">
-  <title>Elden Tracker</title>
+  <link rel="icon" href="images/favicon.ico">
+  <title>Elden Planner</title>
 </head>
 
 <body>
-<div id="mainPage" class="container page-container">
-
   <nav class="navbar navbar-dark fixed-top">
-    <a>Elden Tracker</a>
-    <!-- <button id="panelButton"></button> not sure how to do right now, but we can add this back-->
-  
-    <div class="dropdown show">
-      <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <img src="images/panelicon.png">
-      </a>
-    
-      <div id="homeDropdown" class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-        <a id="accountBtn" class="dropdown-item" href="login.html">Make Account/Sign in</a>
-        <a id="buildsBtn" class="dropdown-item" href="#">See Public Builds</a>
-      </div>
+    <div>Public Builds</div>
+    <div>
+      <button class="navButton" id="newBuild"><img src="images/newicon.png"></button>
+      <button class="navButton" id="panelButton"><img src="images/panelicon.png"></button>
+    </div>
+    <div id="sidePanel">
+      <a href="login.html">Sign In / Create Account</a>
     </div>
   </nav>
-
-  
-  <section id="welcome">
-    <h1>Welcome To Elden Tracker</h1>
-    <p>Welcome to Elden Planner, an Elden Ring Stat Planner.
-      Here you can optimize how to best spend your runes on levels and see how others have done it as well.
-      Sign in to save your builds!
-  </section>
- 
-  <section id="builds">
-    <h1>Builds</h1>
-    <p>Build List coming soon!</p>
-  </section>
-
-</div>
-
+  <div id="splashbg" class="modal">
+    <div id="darken">
+      <h1>ELDEN PLANNER</h1>
+      <div class="modal-content">
+        <p>Welcome to Elden Planner, an Elden Ring Stat Planner.</p>
+        <p>Here you can optimize how to best spend your runes on levels and see how others have done it as well.</p>
+        <p>Sign in to save your builds!</p>
+      </div>
+      <button id="closeSplash" class="button">Get Started</button>
+    </div>
+  </div>
+  <div id="mainPage" class="container page-container">
+    
+  </div>
   <script src="scripts/jquery.min.js"></script>
   <script src="scripts/popper.js"></script>
   <script src="scripts/bootstrap-material-design.js"></script>
