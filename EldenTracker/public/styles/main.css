@@ -11,6 +11,24 @@ body {
     background: url("../images/goldgrit.png") repeat;
     background-color: rgb(134, 105, 8);
     color: white;
+    font-size: 2em;
+}
+
+#panelButton {
+    background-color: rgba(0, 0, 0, 0.301);
+    border-color: rgba(0, 0, 0, 0.301);
+    border-width: 5px;
+    border-radius: 50%;
+    height: 60px;
+    width: 60px;
+    line-height: 40px;
+    cursor: pointer;
+}
+#panelButton>img {
+    margin: 0;
+    padding: 0;
+    width: 40px;
+    height: 40px;
 }
 
 .page-container {
