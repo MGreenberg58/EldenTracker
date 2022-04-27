@@ -101,12 +101,12 @@ rhit.checkForRedirects = function() {
 /* Main */
 /** function and class syntax examples */
 rhit.main = function () {
-	rhit.fbAuthManager = new rhit.FbAuthManager();
-    rhit.fbAuthManager.beginListening((params) => {
-        console.log("isSignedIn: ", rhit.fbAuthManager.isSignedIn);
-        rhit.checkForRedirects();
-        rhit.initializePage();
-	});
+	// rhit.fbAuthManager = new rhit.FbAuthManager();
+    // rhit.fbAuthManager.beginListening((params) => {
+    //     console.log("isSignedIn: ", rhit.fbAuthManager.isSignedIn);
+    //     rhit.checkForRedirects();
+    //     rhit.initializePage();
+	// });
 	console.log("Ready");
 
 	// THESE NEED TO BE PUT IN RESPECTIVE CLASSES
