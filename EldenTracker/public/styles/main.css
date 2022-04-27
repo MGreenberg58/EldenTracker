@@ -1,9 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Fenix&display=swap');
+
 body {
-    background: #DDDDDD;
+    background-image: url("../images/BGLOGO.png"), url("../images/graygrit.png");
+    background-repeat: no-repeat, repeat;
+    background-position: center, initial;
+    background-color: #3d3d3d;
+    font-family: 'Fenix', serif;
 }
 
 .navbar {
-    background-color: #800000;
+    background-image: url("../images/goldgrit.png");
+    background-repeat: repeat;
+    background-color: rgb(150, 111, 12);
     color: white;
 }
 
