@@ -14,6 +14,17 @@ body {
     font-size: 2em;
 }
 
+section {
+    margin: 15vh 5vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  
+    scroll-snap-align: center;
+}
+
 #panelButton {
     background-color: rgba(0, 0, 0, 0.301);
     border-color: rgba(0, 0, 0, 0.301);
@@ -24,7 +35,7 @@ body {
     line-height: 40px;
     cursor: pointer;
 }
-#panelButton>img {
+#panelButton > img {
     margin: 0;
     padding: 0;
     width: 40px;
@@ -32,5 +43,28 @@ body {
 }
 
 .page-container {
-    margin-top: 75px;
+    margin-top: 100px;
 }
+
+h1 {
+    color: gray;
+    font-size: 3em;
+}
+
+p {
+    color: gray;
+    font-size: 1.25em;
+}
+
+#signInBtn, #makeAcctBtn {
+    color: red;
+    font-size: 1.25em;
+}
+
+#homeDropdown {
+    position: absolute;
+    /* right: 100px; */
+    
+
+}
+
