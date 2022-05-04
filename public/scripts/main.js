@@ -101,20 +101,22 @@ rhit.initializePage = function () {
 			console.log("isSignedIn: ", rhit.fbAuthManager.isSignedIn);
 		});
 		new rhit.LoginPageController();
-	} else if (document.querySelector("#userPage")) {
-		document.getElementById("newBuild").onclick = (event) => {
-			window.location.href = "/create.html";
-		};
-	} else if (document.querySelector("#mainPage")) {
+	}
+	
+	if (document.querySelector("#mainPage")) {
 		document.getElementById("closeSplash").onclick = (event) => {
 			document.getElementById("splashbg").style.display = "none";
 		}
 	}
-
-	if (!document.querySelector("#loginPage")) {
-		rhit.navManager = new rhit.NavManager();
-
-		document.querySelector(".navButton").onclick = (event) => {
+	
+	if (document.querySelector("#newBuild")) {
+		document.getElementById("newBuild").onclick = (event) => {
+			window.location.href = "../public/create.html";
+		}
+	}
+	rhit.navManager = new rhit.NavManager();
+	if (document.querySelector("#openPanel")) {
+		document.getElementById("openPanel").onclick = (event) => {
 			if (!rhit.navManager.panelopen) {
 				rhit.navManager.openNav();
 				rhit.navManager.panelopen = true;
