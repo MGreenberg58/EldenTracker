@@ -127,6 +127,9 @@ rhit.main = function () {
 			panelopen = false;
 		}
 	};
+	document.getElementById("newBuild").onclick = (event) => {
+		window.location.href = "../public/create.html";
+	};
 
 	// Welcome Splash Modal
 	document.getElementById("closeSplash").onclick = (event) => {
