@@ -15,11 +15,13 @@
   <nav class="navbar navbar-dark fixed-top">
     <div>Public Builds</div>
     <div>
-      <button id="newBuild" class="navButton"><img src="images/newicon.png"></button>
+      <!-- <button id="newBuild" class="navButton"><img src="images/newicon.png"></button> -->
       <button id="openPanel" class="navButton"><img src="images/panelicon.png"></button>
     </div>
     <div id="sidePanel">
-      <a href="login.html">Sign In / Create Account</a>
+      <a id="signInOption" href="login.html">Sign In / Create Account</a>
+      <a id="myBuildOption" href="userpage.html">My Builds</a>
+      <a id="signOutOption" href="index.html">Sign Out</a>
     </div>
   </nav>
   <div id="splashbg" class="modal">
@@ -40,6 +42,11 @@
   <script src="scripts/popper.js"></script>
   <script src="scripts/bootstrap-material-design.js"></script>
   <script>$("body").bootstrapMaterialDesign();</script>
+  <script src="/__/firebase/7.18.0/firebase-app.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-analytics.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
+  <script src="/__/firebase/init.js"></script>
   <script src="scripts/main.js"></script>
 </body>
 
