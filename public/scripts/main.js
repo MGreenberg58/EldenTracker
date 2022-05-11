@@ -11,13 +11,13 @@ var rhit = rhit || {};
 
 /** globals */
 rhit.FB_COLLECTION_BUILDS = "Builds";
+rhit.FB_COLLECTION_USERS = "Users";
 
 rhit.FB_KEY_LAST_TOUCHED = "lastTouched";
 rhit.FB_KEY_AUTHOR = "author";
 
-rhit.FB_COLLECTION_USERS = "Users";
-
 rhit.fbBuildsManager = null;
+rhit.FbSingleBuildManager = null;
 rhit.buildValuesManager = null;
 
 function htmlToElement(html) {
@@ -98,10 +98,18 @@ rhit.FbAuthManager = class {
 }
 
 rhit.Build = class {
-	constructor(id, name, image) {
-		this.id = id;
+	constructor(name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor) {
 		this.name = name;
-		this.image = image;
+		// this.image = image;
+		this.isPublic = isPublic;
+		this.arcane = arcane;
+		this.dexterity = dexterity;
+		this.endurance = endurance;
+		this.faith = faith;
+		this.intelligence = intelligence;
+		this.mind = mind;
+		this.strength = strength;
+		this.vigor = vigor;
 	}
 }
 
@@ -109,16 +117,14 @@ rhit.FbBuildsManager = class {
 	constructor(uid) {
 		this._uid = uid;
 		this._documentSnapshots = [];
-		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS);
 		this._unsubscribe = null;
 	}
-	add(link, caption) {
+	add(build) {
 		this._ref.add({
-			//    [rhit.FB_KEY_LINK]: link,
-			//    [rhit.FB_KEY_CAPTION]: caption,
-			//    [rhit.FB_KEY_AUTHOR]: rhit.fbAuthManager.uid,
-			//    [rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
-			//TODO: something like this but for our actual database data
+			   [rhit.FB_KEY_BUILD]: build,
+			   [rhit.FB_KEY_AUTHOR]: rhit.fbAuthManager.uid,
+			   [rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
 		}).then(function (docRef) {
 			console.log("Doc written with ID: ", docRef.id);
 		}).catch(function (error) {
@@ -127,7 +133,7 @@ rhit.FbBuildsManager = class {
 
 	}
 	beginListening(changeListener) {
-		let query = this._ref.orderBy(rhit.FB_KEY_LAST_TOUCHED, "desc").limit(50);
+		let query = this._ref.orderBy("build").limit(50);
 		if (this._uid) {
 			query = query.where(rhit.FB_KEY_AUTHOR, "==", this._uid);
 		}
@@ -204,7 +210,6 @@ rhit.UserPageController = class {
 	updateList() {
 		console.log("Updating List");
 		console.log(`Num Builds: ${rhit.fbBuildsManager.length}`);
-		// console.log("Example: ", rhit.fbPhotosManager.getPhotoAtIndex(0));
 
 		const newList = htmlToElement('<div id="buildListContainer"></div>');
 
@@ -427,6 +432,30 @@ rhit.BuildValuesManager = class {
 		document.querySelector("#focusValue").innerHTML = this.focus;
 		document.querySelector("#vitalityValue").innerHTML = this.vitality;
 	}
+	getCurrentBuild() {
+		this.arcane = 10;
+		this.dexterity = 10;
+		this.endurance = 10;
+		this.faith = 10;
+		this.intelligence = 10;
+		this.mind = 10;
+		this.strength = 10;
+		this.vigor = 10;
+
+		let name = document.querySelector("#nameField").value;
+		let isPublic = document.querySelector("#isPublicField").value;
+
+		let vigor = document.querySelector("#vigorValue").innerHTML;
+		let mind = document.querySelector("#mindValue").innerHTML;
+		let endurance = document.querySelector("#enduranceValue").innerHTML;
+		let strength = document.querySelector("#strengthValue").innerHTMLL;
+		let dexterity = document.querySelector("#dexterityValue").innerHTML;
+		let intelligence = document.querySelector("#intelligenceValue").innerHTML;
+		let faith = document.querySelector("#faithValue").innerHTML;
+		let arcane = document.querySelector("#arcaneValue").innerHTML;
+	
+		return new rhit.Build(name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor);
+	}
 }
 
 rhit.checkForRedirects = function () {
@@ -447,7 +476,14 @@ rhit.initializePage = function () {
 
 	if (document.querySelector("#createPage")) {
 		const uid = urlParams.get("uid");
-		rhit.buildValuesManager = new rhit.BuildValuesManager(uid);
+		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
+		rhit.buildValuesManager = new rhit.BuildValuesManager();
+		
+		document.querySelector("#saveBuild").onclick = (event) => {
+			let build = rhit.buildValuesManager.getCurrentBuild();
+			rhit.fbBuildsManager.add(build);
+		}
+		
 	}
 
 	if (document.querySelector("#loginPage")) {
@@ -456,6 +492,8 @@ rhit.initializePage = function () {
 	}
 
 	if (document.querySelector("#mainPage")) {
+		if (rhit.fbAuthManager.isSignedIn) document.getElementById("splashbg").style.display = "none";
+
 		document.getElementById("closeSplash").onclick = (event) => {
 			document.getElementById("splashbg").style.display = "none";
 		}
@@ -583,9 +621,7 @@ rhit.FbUserManager = class {
 	stopListening() {
 		this._unsubscribe();
 	}
-	updatePhotoUrl(photoUrl) {
-
-	}
+	
 	updateName(name) {
 
 	}

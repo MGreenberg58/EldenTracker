@@ -15,6 +15,7 @@
   <nav class="navbar navbar-dark fixed-top">
     <div>Create Build</div>
     <div>
+      <button id="saveBuild" class="navButton"><img src="images/saveicon.png"></button>
       <button id="openPanel" class="navButton"><img src="images/panelicon.png"></button>
     </div>
     <div id="sidePanel">
@@ -27,6 +28,12 @@
     <div class="statlist">
       <div class="namegroup">
         <input id="nameField" type="text" placeholder="-ENTER NAME-">
+      </div>
+      <div class="statitem">
+        <div class="stattag">Is Build Public:</div>
+        <div class="statinfo">
+            <input type="checkbox" id="isPublicField" name="isPublicBox" value="">
+        </div>
       </div>
       <div id="levelField" class="statgroup">
         <div class="statitem">
