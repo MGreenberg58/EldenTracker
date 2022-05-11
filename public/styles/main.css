@@ -253,6 +253,11 @@ input[type=text]::placeholder {
     font-size: 1.5em;
     color: white;
 }
+.gbreak > a {
+    text-shadow: 0 0 5px black;
+    font-size: 1.5em;
+    color: white;
+}
 
 .card {
     margin: 10px 0;

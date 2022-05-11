@@ -18,6 +18,7 @@ rhit.FB_KEY_AUTHOR = "author";
 rhit.FB_COLLECTION_USERS = "Users";
 
 rhit.fbBuildsManager = null;
+rhit.buildValuesManager = null;
 
 function htmlToElement(html) {
 	var template = document.createElement("template");
@@ -190,6 +191,198 @@ rhit.UserPageController = class {
 	}
 }
 
+rhit.BuildValuesManager = class {
+	constructor() {
+		this.name = '';
+		this.level = 1,
+		this.cost = 0,
+		this.vigor = 10,
+		this.mind = 10,
+		this.endurance = 10,
+		this.strength = 10,
+		this.dexterity = 10,
+		this.intelligence = 10,
+		this.faith = 10,
+		this.arcane = 10,
+		this.hp = 414,
+		this.fp = 68,
+		this.stamina = 92,
+		this.load = 48.2,
+		this.discovery = 110,
+		this.armament = 115,
+		this.casting = 210,
+		this.physical = 75,
+		this.magic = 91,
+		this.fire = 78,
+		this.lightning = 71,
+		this.holy = 91,
+		this.immunity = 90,
+		this.robustness = 90,
+		this.focus = 90,
+		this.vitality = 100
+		let decrementors = document.querySelectorAll("#decrement");
+		decrementors.forEach((button) => {
+			let stat = button.dataset.stat;
+			button.onclick = ((event) => {
+				this.decrementValue(stat);
+			})
+		})
+		let incrementors = document.querySelectorAll("#increment");
+		incrementors.forEach((button) => {
+			let stat = button.dataset.stat;
+			button.onclick = ((event) => {
+				this.incrementValue(stat);
+			})
+		})
+		this.updateButtonColors();
+		this.fillValues();
+	}
+	decrementValue(stat) {
+		if(this[stat] == 10) {
+			return;
+		}
+		console.log("Decrementing " + stat);
+		this[stat]--;
+		this.level--;
+		this.updateButtonColors();
+		this.calcValues();
+		this.fillValues();
+	}
+	incrementValue(stat) {
+		if(this[stat] == 99) {
+			return;
+		}
+		console.log("Incrementing " + stat);
+		this[stat]++;
+		this.level++;
+		this.updateButtonColors();
+		this.calcValues();
+		this.fillValues();
+	}
+	updateButtonColors() {
+		let decrementors = document.querySelectorAll("#decrement");
+		decrementors.forEach((button) => {
+			let stat = button.dataset.stat;
+			if(this[stat] == 10) {
+				button.style.color = "rgba(255, 255, 255, 0.1)";
+			} else {
+				button.style.color = "rgba(255, 255, 255, 1)";
+			}
+		})
+		let incrementors = document.querySelectorAll("#increment");
+		incrementors.forEach((button) => {
+			let stat = button.dataset.stat;
+			if(this[stat] == 99) {
+				button.style.color = "rgba(255, 255, 255, 0.1)";
+			} else {
+				button.style.color = "rgba(255, 255, 255, 1)";
+			}
+		})
+	}
+	calcValues() {
+		this.cost = 0;
+		this.hp = 414;
+		this.fp = 68;
+		this.stamina = 92;
+		this.load = 48.2;
+		this.discovery = 110;
+		this.armament = 115;
+		this.casting = 210;
+		this.physical = 75;
+		this.magic = 91;
+		this.fire = 78;
+		this.lightning = 71;
+		this.holy = 91;
+		this.immunity = 90;
+		this.robustness = 90;
+		this.focus = 90;
+		this.vitality = 100;
+		const sheet2 = firebase.database().ref("Sheet2");
+		sheet2.on('value', (snapshot) => {
+			const leveldata = snapshot.val();
+
+			for(let i = 0; i < this.level - 1; i++) {
+				this.cost += leveldata[i].runes;
+				this.physical += leveldata[i].physical;
+				this.magic += leveldata[i].magic;
+				this.fire += leveldata[i].fire;
+				this.lightning += leveldata[i].lightning;
+				this.holy += leveldata[i].holy;
+				this.immunity += leveldata[i].immunity;
+				this.robustness += leveldata[i].robustness;
+				this.focus += leveldata[i].focus;
+				this.vitality += leveldata[i].vitality;
+			}
+		})
+
+		const sheet1 = firebase.database().ref("Sheet1");
+		sheet1.on('value', (snapshot) => {
+			const leveldata = snapshot.val();
+
+			for(let i = 0; i < this.vigor - 10; i++) {
+				this.hp += leveldata[i].hp;
+				this.fire += leveldata[i].fire;
+				this.immunity += leveldata[i].immunity;
+			}
+			for(let i = 0; i < this.mind - 10; i++) {
+				this.fp += leveldata[i].fp;
+				this.focus += leveldata[i].focus;
+			}
+			for(let i = 0; i < this.endurance - 10; i++) {
+				this.stamina += leveldata[i].stamina;
+				this.load = parseFloat((this.load + leveldata[i].load).toFixed(1));
+				this.robustness += leveldata[i].robustness;
+			}
+			for(let i = 0; i < this.strength - 10; i++) {
+				this.physical += leveldata[i].physical;
+				this.armament += leveldata[i].strarmament;
+			}
+			for(let i = 0; i < this.dexterity - 10; i++) {
+				this.armament += leveldata[i].dexarmament;
+			}
+			for(let i = 0; i < this.intelligence - 10; i++) {
+				this.magic += leveldata[i].magic;
+			}
+			for(let i = 0; i < this.faith - 10; i++) {
+				this.casting += leveldata[i].casting;
+			}
+			for(let i = 0; i < this.arcane - 10; i++) {
+				this.discovery += leveldata[i].discovery;
+				this.holy += leveldata[i].holy;
+				this.vitality += leveldata[i].vitality;
+			}
+		})
+	}
+	fillValues() {
+		document.querySelector("#levelValue").innerHTML = this.level;
+		document.querySelector("#runesValue").innerHTML = this.cost;
+		document.querySelector("#vigorValue").innerHTML = this.vigor;
+		document.querySelector("#mindValue").innerHTML = this.mind;
+		document.querySelector("#enduranceValue").innerHTML = this.endurance;
+		document.querySelector("#strengthValue").innerHTML = this.strength;
+		document.querySelector("#dexterityValue").innerHTML = this.dexterity;
+		document.querySelector("#intelligenceValue").innerHTML = this.intelligence;
+		document.querySelector("#faithValue").innerHTML = this.faith;
+		document.querySelector("#arcaneValue").innerHTML = this.arcane;
+		document.querySelector("#hpValue").innerHTML = this.hp;
+		document.querySelector("#fpValue").innerHTML = this.fp;
+		document.querySelector("#staminaValue").innerHTML = this.stamina;
+		document.querySelector("#loadValue").innerHTML = this.load;
+		document.querySelector("#discoveryValue").innerHTML = this.discovery;
+		document.querySelector("#armamentValue").innerHTML = this.armament;
+		document.querySelector("#castingValue").innerHTML = this.casting;
+		document.querySelector("#physicalValue").innerHTML = this.physical;
+		document.querySelector("#magicValue").innerHTML = this.magic;
+		document.querySelector("#fireValue").innerHTML = this.fire;
+		document.querySelector("#lightningValue").innerHTML = this.lightning;
+		document.querySelector("#holyValue").innerHTML = this.holy;
+		document.querySelector("#immunityValue").innerHTML = this.immunity;
+		document.querySelector("#robustnessValue").innerHTML = this.robustness;
+		document.querySelector("#focusValue").innerHTML = this.focus;
+		document.querySelector("#vitalityValue").innerHTML = this.vitality;
+	}
+}
+
 rhit.checkForRedirects = function () {
 
 	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
@@ -204,6 +397,11 @@ rhit.initializePage = function () {
 		const uid = urlParams.get("uid");
 		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
 		new rhit.UserPageController();
+	}
+
+	if (document.querySelector("#createPage")) {
+		const uid = urlParams.get("uid");
+		rhit.buildValuesManager = new rhit.BuildValuesManager(uid);
 	}
 
 	if (document.querySelector("#loginPage")) {
