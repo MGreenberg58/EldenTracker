@@ -97,61 +97,107 @@ rhit.FbAuthManager = class {
 	}
 }
 
+rhit.Build = class {
+	constructor(id, name, image) {
+		this.id = id;
+		this.name = name;
+		this.image = image;
+	}
+}
+
 rhit.FbBuildsManager = class {
 	constructor(uid) {
-	  this._uid = uid;
-	  this._documentSnapshots = [];
-	  this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
-	  this._unsubscribe = null;
+		this._uid = uid;
+		this._documentSnapshots = [];
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+		this._unsubscribe = null;
 	}
-	add(link, caption) {  
+	add(link, caption) {
 		this._ref.add({
-		//    [rhit.FB_KEY_LINK]: link,
-		//    [rhit.FB_KEY_CAPTION]: caption,
-		//    [rhit.FB_KEY_AUTHOR]: rhit.fbAuthManager.uid,
-		//    [rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
-		//TODO: something like this but for our actual database data
+			//    [rhit.FB_KEY_LINK]: link,
+			//    [rhit.FB_KEY_CAPTION]: caption,
+			//    [rhit.FB_KEY_AUTHOR]: rhit.fbAuthManager.uid,
+			//    [rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+			//TODO: something like this but for our actual database data
 		}).then(function (docRef) {
-		   console.log("Doc written with ID: ", docRef.id);
+			console.log("Doc written with ID: ", docRef.id);
 		}).catch(function (error) {
-		   console.error("Error adding doc: ", error);
+			console.error("Error adding doc: ", error);
 		});
-   
+
 	}
-	beginListening(changeListener) {    
-	   let query = this._ref.orderBy(rhit.FB_KEY_LAST_TOUCHED, "desc").limit(50);
-		   if (this._uid) {
-			   query = query.where(rhit.FB_KEY_AUTHOR, "==", this._uid);
-		   }
-   
-		   this._unsubscribe = query.onSnapshot((querySnapshot) => {
-			   console.log("Database Update");
-   
-			   this._documentSnapshots = querySnapshot.docs;
-   
-   
-			   querySnapshot.forEach((doc) => {
-				   console.log(doc.data());
-			   });
-			   changeListener();
-		   });
+	beginListening(changeListener) {
+		let query = this._ref.orderBy(rhit.FB_KEY_LAST_TOUCHED, "desc").limit(50);
+		if (this._uid) {
+			query = query.where(rhit.FB_KEY_AUTHOR, "==", this._uid);
+		}
+
+		this._unsubscribe = query.onSnapshot((querySnapshot) => {
+			console.log("Database Update");
+
+			this._documentSnapshots = querySnapshot.docs;
+
+
+			querySnapshot.forEach((doc) => {
+				console.log(doc.data());
+			});
+			changeListener();
+		});
 	}
-	stopListening() {    
-	   this._unsubscribe();
+	stopListening() {
+		this._unsubscribe();
 	}
-	get length() {    
-	   return this._documentSnapshots.length;
+	get length() {
+		return this._documentSnapshots.length;
 	}
-	getBuildAtIndex(index) { 
-	   const snapshot = this._documentSnapshots[index];   
-	//    const photo = new rhit.Photo(snapshot.id, snapshot.get(rhit.FB_KEY_LINK), snapshot.get(rhit.FB_KEY_CAPTION), snapshot.get(rhit.FB_KEY_AUTHOR));
-	   return build;
+	getBuildAtIndex(index) {
+		const snapshot = this._documentSnapshots[index];
+		//    const photo = new rhit.Photo(snapshot.id, snapshot.get(rhit.FB_KEY_LINK), snapshot.get(rhit.FB_KEY_CAPTION), snapshot.get(rhit.FB_KEY_AUTHOR));
+		return build;
 	}
+}
+
+rhit.FbSingleBuildManager = class {
+	constructor(buildId) {
+		this._documentSnapshot = {};
+		this._unsubscribe = null;
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS).doc(buildId);
+		console.log(`Listening to ${this._ref.path}`);
+	}
+	beginListening(changeListener) {
+		this._unsubscribe = this._ref.onSnapshot((doc) => {
+			if (doc.exists) {
+				console.log("Doc data: ", doc.data());
+				this._documentSnapshot = doc;
+				changeListener();
+			} else {
+				console.log("No doc exists");
+			}
+		});
+	}
+	stopListening() {
+		this._unsubscribe();
+	}
+	update(caption) {
+		this._ref.update({
+			[rhit.FB_KEY_CAPTION]: caption,
+			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+		}).then((docRef) => {
+			console.log("Doc written with ID: ", docRef.id);
+		}).catch(function (error) {
+			console.error("Error adding doc: ", error);
+		});
+	}
+
+	delete() {
+		return this._ref.delete();
+	}
+
 }
 
 rhit.UserPageController = class {
 	constructor() {
-		
+
 
 		rhit.fbBuildsManager.beginListening(this.updateList.bind(this));
 	}
@@ -182,11 +228,11 @@ rhit.UserPageController = class {
 
 	}
 
-	_createCard(photo) {
+	_createCard(build) {
 		return htmlToElement(
-		`<div class="pin">
-			<img class="img-fluid card-img-bottom" src="${photo.link}"></img>	
-			<p class="card-text text-center">${photo.caption}</h6>
+			`<div class="pin">
+			<img class="img-fluid card-img-bottom" src="${build.image}"></img>	
+			<p class="card-text text-center">${build.name}</h6>
 		</div>`);
 	}
 }
@@ -408,13 +454,13 @@ rhit.initializePage = function () {
 		console.log("Login Page");
 		new rhit.LoginPageController();
 	}
-	
+
 	if (document.querySelector("#mainPage")) {
 		document.getElementById("closeSplash").onclick = (event) => {
 			document.getElementById("splashbg").style.display = "none";
 		}
 	}
-	
+
 	if (document.querySelector("#newBuild")) {
 		document.getElementById("newBuild").onclick = (event) => {
 			window.location.href = "/create.html";
@@ -423,6 +469,7 @@ rhit.initializePage = function () {
 
 	rhit.navManager = new rhit.NavManager();
 	if (document.querySelector("#openPanel")) {
+		rhit.navManager.initNav();
 		document.getElementById("openPanel").onclick = (event) => {
 			if (!rhit.navManager.panelopen) {
 				rhit.navManager.openNav();
@@ -430,28 +477,6 @@ rhit.initializePage = function () {
 			} else {
 				rhit.navManager.closeNav();
 				rhit.navManager.panelopen = false;
-			}
-
-			if (rhit.fbAuthManager.isSignedIn) {
-				if (document.querySelector("#signInOption")) {
-					document.querySelector("#signInOption").hidden = true;
-				}
-
-				if (document.querySelector("#signOutOption")) {
-					document.querySelector("#signOutOption").onclick = (event) => {
-						rhit.fbAuthManager.signOut();
-					}
-				}
-			} else {
-				if (document.querySelector("#signOutOption")) {
-					document.querySelector("#signOutOption").hidden = true;	
-				}
-			}
-
-			if (!rhit.fbAuthManager.isSignedIn) {
-				if (document.querySelector("#myBuildOption")) {
-					document.querySelector("#myBuildOption").hidden = true;
-				}
 			}
 		};
 	}
@@ -461,6 +486,54 @@ rhit.initializePage = function () {
 rhit.NavManager = class {
 	constructor() {
 		let panelopen = false;
+	}
+
+	initNav() {
+		if (rhit.fbAuthManager.isSignedIn) {
+			if (document.querySelector("#signInOption")) {
+				document.querySelector("#signInOption").hidden = true;
+			}
+
+			if (document.querySelector("#signOutOption")) {
+				document.querySelector("#signOutOption").onclick = (event) => {
+					rhit.fbAuthManager.signOut();
+					window.location.href = "/index.html"
+				}
+			}
+
+			if (document.querySelector("#myBuildOption")) {
+				document.querySelector("#myBuildOption").onclick = (event) => {
+					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+				}
+			}
+		} else {
+			if (document.querySelector("#signOutOption")) {
+				document.querySelector("#signOutOption").hidden = true;
+			}
+			if (document.querySelector("#myBuildOption")) {
+				document.querySelector("#myBuildOption").hidden = true;
+			}
+		}
+
+		if (document.querySelector("#signInOption")) {
+			document.querySelector("#signInOption").onclick = (event) => {
+				window.location.href = "/login.html";
+			}
+		}
+
+		if (document.querySelector("#signOutOption")) {
+			
+		}
+
+		if (document.querySelector("#myBuildOption")) {
+			
+		}
+
+		if (document.querySelector("#publicBuildOption")) {
+			document.querySelector("#publicBuildOption").onclick = (event) => {
+				window.location.href = "/index.html";
+			}
+		}
 	}
 
 	openNav() {
@@ -483,26 +556,26 @@ rhit.FbUserManager = class {
 		const userRef = this._collectionRef.doc(uid);
 
 		return userRef.get().then((doc) => {
-			if (doc.exists) {
-				console.log("User already exists: ", doc.data());
-			} else {
-				console.log("Creating user!");
+				if (doc.exists) {
+					console.log("User already exists: ", doc.data());
+				} else {
+					console.log("Creating user!");
 
-				return userRef.set({
-					[rhit.FB_KEY_NAME]: name,
-					[rhit.FB_KEY_PHOTO_URL]: photoUrl
-				})
-				.then(function () {
-					console.log("Doc written");
-				})
-				.catch(function (error) {
-					console.log("Error writing doc: ", error);
-				});
-			}
-		})
-		.catch((err) => {
-			console.log("Error: ", err);
-		});
+					return userRef.set({
+							[rhit.FB_KEY_NAME]: name,
+							[rhit.FB_KEY_PHOTO_URL]: photoUrl
+						})
+						.then(function () {
+							console.log("Doc written");
+						})
+						.catch(function (error) {
+							console.log("Error writing doc: ", error);
+						});
+				}
+			})
+			.catch((err) => {
+				console.log("Error: ", err);
+			});
 	}
 	beginListening(uid, changeListener) {
 
@@ -516,10 +589,10 @@ rhit.FbUserManager = class {
 	updateName(name) {
 
 	}
-	
+
 }
 
-rhit.createUserObjectIfNeeded = function() {
+rhit.createUserObjectIfNeeded = function () {
 	return new Promise((resolve, reject) => {
 		if (!rhit.fbAuthManager.isSignedIn) {
 			resolve();
@@ -538,7 +611,7 @@ rhit.createUserObjectIfNeeded = function() {
 		).then(() => {
 			resolve();
 		});
-		
+
 	});
 }
 
