@@ -11,10 +11,6 @@ var rhit = rhit || {};
 
 /** globals */
 rhit.FB_COLLECTION_BUILDS = "Builds";
-rhit.FB_COLLECTION_USERS = "Users";
-
-rhit.FB_KEY_LAST_TOUCHED = "lastTouched";
-rhit.FB_KEY_AUTHOR = "author";
 
 rhit.fbBuildsManager = null;
 rhit.FbSingleBuildManager = null;
@@ -98,7 +94,8 @@ rhit.FbAuthManager = class {
 }
 
 rhit.Build = class {
-	constructor(name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor) {
+	constructor(id, name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor) {
+		this.id = id;
 		this.name = name;
 		// this.image = image;
 		this.isPublic = isPublic;
@@ -122,9 +119,18 @@ rhit.FbBuildsManager = class {
 	}
 	add(build) {
 		this._ref.add({
-			   [rhit.FB_KEY_BUILD]: build,
-			   [rhit.FB_KEY_AUTHOR]: rhit.fbAuthManager.uid,
-			   [rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+			   "name": build.name,
+			   "isPublic": build.isPublic,
+			   "vigor": build.vigor,
+			   "mind": build.mind,
+			   "endurance": build.endurance,
+			   "strength": build.strength,
+			   "dexterity": build.dexterity,
+			   "intelligence": build.intelligence,
+			   "faith": build.faith,
+			   "arcane": build.arcane,
+			   "author": rhit.fbAuthManager.uid,
+			   "lastTouched": firebase.firestore.Timestamp.now(),
 		}).then(function (docRef) {
 			console.log("Doc written with ID: ", docRef.id);
 		}).catch(function (error) {
@@ -133,16 +139,16 @@ rhit.FbBuildsManager = class {
 
 	}
 	beginListening(changeListener) {
-		let query = this._ref.orderBy("build").limit(50);
+		let query = this._ref.orderBy("name").limit(50);
+		console.log("sdfdjksalffsfdlklkfdsfslkjfdslkjfs", this._uid);
 		if (this._uid) {
-			query = query.where(rhit.FB_KEY_AUTHOR, "==", this._uid);
+			query = query.where("author", "==", this._uid);
 		}
 
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
 			console.log("Database Update");
 
 			this._documentSnapshots = querySnapshot.docs;
-
 
 			querySnapshot.forEach((doc) => {
 				console.log(doc.data());
@@ -158,8 +164,9 @@ rhit.FbBuildsManager = class {
 	}
 	getBuildAtIndex(index) {
 		const snapshot = this._documentSnapshots[index];
-		//    const photo = new rhit.Photo(snapshot.id, snapshot.get(rhit.FB_KEY_LINK), snapshot.get(rhit.FB_KEY_CAPTION), snapshot.get(rhit.FB_KEY_AUTHOR));
-		return build;
+		console.log(snapshot);
+		console.log(snapshot.name);
+		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
 	}
 }
 
@@ -184,8 +191,9 @@ rhit.FbSingleBuildManager = class {
 	stopListening() {
 		this._unsubscribe();
 	}
-	update(caption) {
+	update(build) {
 		this._ref.update({
+			//TODO: stuff here
 			[rhit.FB_KEY_CAPTION]: caption,
 			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
 		}).then((docRef) => {
@@ -203,8 +211,6 @@ rhit.FbSingleBuildManager = class {
 
 rhit.UserPageController = class {
 	constructor() {
-
-
 		rhit.fbBuildsManager.beginListening(this.updateList.bind(this));
 	}
 	updateList() {
@@ -220,7 +226,7 @@ rhit.UserPageController = class {
 			card.onclick = (event) => {
 				//TODO: some other stuff here maybe
 				console.log(`You clicked a card: ${build.id}`);
-				window.location.href = `/image.html?id=${build.id}`;
+				window.location.href = `/create.html?id=${build.id}`;
 			};
 
 			newList.appendChild(card);
@@ -236,8 +242,7 @@ rhit.UserPageController = class {
 	_createCard(build) {
 		return htmlToElement(
 			`<div class="pin">
-			<img class="img-fluid card-img-bottom" src="${build.image}"></img>	
-			<p class="card-text text-center">${build.name}</h6>
+			<p class="card-text text-center">${build.name}</p>
 		</div>`);
 	}
 }
@@ -443,12 +448,11 @@ rhit.BuildValuesManager = class {
 		this.vigor = 10;
 
 		let name = document.querySelector("#nameField").value;
-		let isPublic = document.querySelector("#isPublicField").value;
-
+		let isPublic = document.querySelector("#isPublicField").checked;
 		let vigor = document.querySelector("#vigorValue").innerHTML;
 		let mind = document.querySelector("#mindValue").innerHTML;
 		let endurance = document.querySelector("#enduranceValue").innerHTML;
-		let strength = document.querySelector("#strengthValue").innerHTMLL;
+		let strength = document.querySelector("#strengthValue").innerHTML;
 		let dexterity = document.querySelector("#dexterityValue").innerHTML;
 		let intelligence = document.querySelector("#intelligenceValue").innerHTML;
 		let faith = document.querySelector("#faithValue").innerHTML;
@@ -476,12 +480,14 @@ rhit.initializePage = function () {
 
 	if (document.querySelector("#createPage")) {
 		const uid = urlParams.get("uid");
+		const buildId = urlParams.get("id");
 		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
 		rhit.buildValuesManager = new rhit.BuildValuesManager();
 		
 		document.querySelector("#saveBuild").onclick = (event) => {
 			let build = rhit.buildValuesManager.getCurrentBuild();
 			rhit.fbBuildsManager.add(build);
+			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
 		}
 		
 	}
@@ -585,7 +591,7 @@ rhit.NavManager = class {
 
 rhit.FbUserManager = class {
 	constructor() {
-		this._collectionRef = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+		this._collectionRef = firebase.firestore().collection("Users");
 		this._document = null;
 		this._unsubscribe = null;
 		console.log("Made user manager");
