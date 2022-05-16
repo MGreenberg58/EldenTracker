@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+  <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="icon" href="images/favicon.ico">
+  <title>Elden Planner</title>
+</head>
+
+<body>
+  <nav class="navbar navbar-dark fixed-top">
+    <div>Edit Build</div>
+    <div>
+      <button id="saveBuild" class="navButton"><img src="images/saveicon.png"></button>
+      <button id="openPanel" class="navButton"><img src="images/panelicon.png"></button>
+    </div>
+    <div id="sidePanel">
+      <button id="publicBuildOption">Public Builds</button>
+      <button id="myBuildOption">My Builds</button>
+    </div>
+  </nav>
+
+  <div id="createPage" class="container page-container">
+    <div class="statlist">
+      <div class="namegroup">
+        <input id="nameField" type="text" placeholder="-ENTER NAME-">
+      </div>
+      <div class="statitem">
+        <div class="stattag">Is Build Public:</div>
+        <div class="statinfo">
+            <input type="checkbox" id="isPublicField" name="isPublicBox" value="">
+        </div>
+      </div>
+      <div id="levelField" class="statgroup">
+        <div class="statitem">
+          <div class="stattag">LEVEL:</div>
+          <div class="statinfo">
+            <div id="levelValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">RUNES NEEDED:</div>
+          <div class="statinfo">
+            <div id="runesValue" class="calcvalue">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="gbreak">
+        <span></span>
+        <div>ATTRIBUTE POINTS</div>
+      </div>
+      <div id="pointsField" class="statgroup">
+        <div class="statitem">
+          <div class="stattag">VIGOR:</div>
+          <div class="statinfo">
+            <button data-stat="vigor" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="vigorValue" class="chosenvalue">-</div>
+            <button data-stat="vigor" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">MIND:</div>
+          <div class="statinfo">
+            <button data-stat="mind" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="mindValue" class="chosenvalue">-</div>
+            <button data-stat="mind" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">ENDURANCE:</div>
+          <div class="statinfo">
+            <button data-stat="endurance" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="enduranceValue" class="chosenvalue">-</div>
+            <button data-stat="endurance" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">STRENGTH:</div>
+          <div class="statinfo">
+            <button data-stat="strength" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="strengthValue" class="chosenvalue">-</div>
+            <button data-stat="strength" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">DEXTERITY:</div>
+          <div class="statinfo">
+            <button data-stat="dexterity" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="dexterityValue" class="chosenvalue">-</div>
+            <button data-stat="dexterity" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">INTELLIGENCE:</div>
+          <div class="statinfo">
+            <button data-stat="intelligence" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="intelligenceValue" class="chosenvalue">-</div>
+            <button data-stat="intelligence" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">FAITH:</div>
+          <div class="statinfo">
+            <button data-stat="faith" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="faithValue" class="chosenvalue">-</div>
+            <button data-stat="faith" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">ARCANE:</div>
+          <div class="statinfo">
+            <button data-stat="arcane" id="decrement" class="statbutton"><i class="material-icons">chevron_left</i></button>
+            <div id="arcaneValue" class="chosenvalue">-</div>
+            <button data-stat="arcane" id="increment" class="statbutton"><i class="material-icons">chevron_right</i></button>
+          </div>
+        </div>
+      </div>
+      <div class="gbreak">
+        <span></span>
+        <div>BASE STATS</div>
+      </div>
+      <div id="baseStatsField" class="statgroup">
+        <div class="statitem">
+          <div class="stattag">HP:</div>
+          <div class="statinfo">
+            <div id="hpValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">FP:</div>
+          <div class="statinfo">
+            <div id="fpValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">STAMINA:</div>
+          <div class="statinfo">
+            <div id="staminaValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">EQUIP LOAD:</div>
+          <div class="statinfo">
+            <div id="loadValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">DISCOVERY:</div>
+          <div class="statinfo">
+            <div id="discoveryValue" class="calcvalue">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="gbreak">
+        <span></span>
+        <div>ATTACK POWER</div>
+      </div>
+      <div id="apField" class="statgroup">
+        <div class="statitem">
+          <div class="stattag">
+            <div>ARMAMENT:</div>
+            <div class="stattagsubtext">(Based on CLUB weapon)</div>
+          </div>
+          <div class="statinfo">
+            <div id="armamentValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">
+            <div>CASTING:</div>
+            <div class="stattagsubtext">(Based on FINGER seal)</div>
+          </div>
+          <div class="statinfo">
+            <div id="castingValue" class="calcvalue">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="gbreak">
+        <span></span>
+        <div>DEFENSE / DAMAGE NEGATION</div>
+      </div>
+      <div id="defenseField" class="statgroup">
+        <div class="statitem">
+          <div class="stattag">
+            <div>PHYSICAL:</div>
+            <div class="stattagsubtext">(+ VS Strike, Slash, Pierce)</div>
+          </div>
+          <div class="statinfo">
+            <div id="physicalValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">MAGIC:</div>
+          <div class="statinfo">
+            <div id="magicValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">FIRE:</div>
+          <div class="statinfo">
+            <div id="fireValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">LIGHTNING:</div>
+          <div class="statinfo">
+            <div id="lightningValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">HOLY:</div>
+          <div class="statinfo">
+            <div id="holyValue" class="calcvalue">-</div>
+          </div>
+        </div>
+      </div>
+      <div class="gbreak">
+        <span></span>
+        <div>RESISTANCE</div>
+      </div>
+      <div id="Resistance" class="statgroup">
+        <div class="statitem">
+          <div class="stattag">IMMUNITY:</div>
+          <div class="statinfo">
+            <div id="immunityValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">ROBUSTNESS:</div>
+          <div class="statinfo">
+            <div id="robustnessValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">FOCUS:</div>
+          <div class="statinfo">
+            <div id="focusValue" class="calcvalue">-</div>
+          </div>
+        </div>
+        <div class="statitem">
+          <div class="stattag">VITALITY:</div>
+          <div class="statinfo">
+            <div id="vitalityValue" class="calcvalue">-</div>
+          </div>
+        </div>
+      </div>
+      <br>
+      <div class="gbreak">
+        <a href="https://steamcommunity.com/sharedfiles/filedetails/?id=2765060616">Leveling info provided by Drake Ravenwolf on Steam</a>
+      </div>
+    </div>
+
+  </div>
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/popper.js"></script>
+  <script src="scripts/bootstrap-material-design.js"></script>
+  <script>$("body").bootstrapMaterialDesign();</script>
+  <script src="/__/firebase/7.18.0/firebase-app.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-analytics.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-database.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
+  <script src="/__/firebase/init.js"></script>
+  <script src="scripts/rosefire.min.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+
+</html>

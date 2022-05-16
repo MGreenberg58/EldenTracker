@@ -226,7 +226,7 @@ rhit.UserPageController = class {
 			card.onclick = (event) => {
 				//TODO: some other stuff here maybe
 				console.log(`You clicked a card: ${build.id}`);
-				window.location.href = `/create.html?id=${build.id}`;
+				window.location.href = `/edit.html?id=${build.id}`;
 			};
 
 			newList.appendChild(card);
@@ -438,15 +438,6 @@ rhit.BuildValuesManager = class {
 		document.querySelector("#vitalityValue").innerHTML = this.vitality;
 	}
 	getCurrentBuild() {
-		this.arcane = 10;
-		this.dexterity = 10;
-		this.endurance = 10;
-		this.faith = 10;
-		this.intelligence = 10;
-		this.mind = 10;
-		this.strength = 10;
-		this.vigor = 10;
-
 		let name = document.querySelector("#nameField").value;
 		let isPublic = document.querySelector("#isPublicField").checked;
 		let vigor = document.querySelector("#vigorValue").innerHTML;
@@ -459,6 +450,20 @@ rhit.BuildValuesManager = class {
 		let arcane = document.querySelector("#arcaneValue").innerHTML;
 	
 		return new rhit.Build(name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor);
+	}
+	setCurrentBuild(build) {
+		this.name = build.name;
+		this.isPublic = build.isPublic;
+		this.vigor = build.vigor;
+		this.mind = build.mind;
+		this.endurance = build.endurance;
+		this.strength = build.strength;
+		this.dexterity = build.dexterity;
+		this.intelligence = build.intelligance;
+		this.faith = build.faith;
+		this.arcane = build.arcane;
+		this.calcValues();
+		this.fillValues();
 	}
 }
 
@@ -485,6 +490,26 @@ rhit.initializePage = function () {
 		rhit.buildValuesManager = new rhit.BuildValuesManager();
 		
 		document.querySelector("#saveBuild").onclick = (event) => {
+			let build = rhit.buildValuesManager.getCurrentBuild();
+			rhit.fbBuildsManager.add(build);
+			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+		}
+		
+	}
+
+	if (document.querySelector("#editPage")) {
+		const uid = urlParams.get("uid");
+		const buildId = urlParams.get("id");
+		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
+		rhit.buildValuesManager = new rhit.BuildValuesManager();
+
+		const doc = collection('Builds').doc(buildId).get();
+
+		const build = new rhit.Build(doc.id, doc.get("name"), doc.get("isPublic"), doc.get("arcane"), doc.get("dexterity"), doc.get("endurance"), doc.get("faith"), doc.get("intelligence"), doc.get("mind"), doc.get("strength"), doc.get("vigor"));
+		rhit.buildValuesManager.setCurrentBuild(build);
+
+		document.querySelector("#saveBuild").onclick = (event) => {
+			collection("Builds").doc(buildId).delete();
 			let build = rhit.buildValuesManager.getCurrentBuild();
 			rhit.fbBuildsManager.add(build);
 			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
