@@ -118,23 +118,27 @@ rhit.FbBuildsManager = class {
 		this._unsubscribe = null;
 	}
 	add(build) {
-		this._ref.add({		
-			   "name": build.name,
-			   "isPublic": build.isPublic,
-			   "vigor": build.vigor,
-			   "mind": build.mind,
-			   "endurance": build.endurance,
-			   "strength": build.strength,
-			   "dexterity": build.dexterity,
-			   "intelligence": build.intelligence,
-			   "faith": build.faith,
-			   "arcane": build.arcane,
-			   "author": rhit.fbAuthManager.uid,
-			   "lastTouched": firebase.firestore.Timestamp.now(),
-		}).then(function (docRef) {
-			console.log("Doc written with ID: ", docRef.id);
-		}).catch(function (error) {
-			console.error("Error adding doc: ", error);
+		return new Promise((resolve, reject) => {
+			this._ref.add({		
+				"name": build.name,
+				"isPublic": build.isPublic,
+				"vigor": build.vigor,
+				"mind": build.mind,
+				"endurance": build.endurance,
+				"strength": build.strength,
+				"dexterity": build.dexterity,
+				"intelligence": build.intelligence,
+				"faith": build.faith,
+				"arcane": build.arcane,
+				"author": rhit.fbAuthManager.uid,
+				"lastTouched": firebase.firestore.Timestamp.now(),
+		 }).then(function (docRef) {
+			 console.log("Doc written with ID: ", docRef.id);
+			 resolve();
+		 }).catch(function (error) {
+			 console.error("Error adding doc: ", error);
+			 reject();
+		 });
 		});
 
 	}
@@ -187,23 +191,27 @@ rhit.FbSingleBuildManager = class {
 		});
 	}
 	update(build) {
-		this._ref.update({
-			"name": build.name,
-			"isPublic": build.isPublic,
-			"vigor": build.vigor,
-			"mind": build.mind,
-			"endurance": build.endurance,
-			"strength": build.strength,
-			"dexterity": build.dexterity,
-			"intelligence": build.intelligence,
-			"faith": build.faith,
-			"arcane": build.arcane,
-			"author": rhit.fbAuthManager.uid,
-			"lastTouched": firebase.firestore.Timestamp.now(),
-		}).then((docRef) => {
-			console.log("Doc written with ID: ", docRef.id);
-		}).catch(function(error) {
-			console.error("Error adding doc: ", error);
+		return new Promise((resolve, reject) => {
+			this._ref.update({		
+				"name": build.name,
+				"isPublic": build.isPublic,
+				"vigor": build.vigor,
+				"mind": build.mind,
+				"endurance": build.endurance,
+				"strength": build.strength,
+				"dexterity": build.dexterity,
+				"intelligence": build.intelligence,
+				"faith": build.faith,
+				"arcane": build.arcane,
+				"author": rhit.fbAuthManager.uid,
+				"lastTouched": firebase.firestore.Timestamp.now(),
+		 }).then(function (docRef) {
+			 console.log("Doc written with ID: ", docRef.id);
+			 resolve();
+		 }).catch(function (error) {
+			 console.error("Error adding doc: ", error);
+			 reject();
+		 });
 		});
 	}
 	stopListening() {
@@ -497,8 +505,9 @@ rhit.EditPageController = class {
 		document.querySelector("#saveBuild").onclick = (event) => {
 			let build = rhit.buildValuesManager.getCurrentBuild();
 			console.log(build);
-			rhit.fbSingleBuildManager.update(build);
-			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+			rhit.fbSingleBuildManager.update(build).then(() => {
+				window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+			});
 		}
 
 		document.querySelector("#deleteBuild").onclick = (event) => {
@@ -510,13 +519,15 @@ rhit.EditPageController = class {
 
 rhit.CreatePageController = class {
 	constructor(uid, buildId) {
-		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
+		rhit.fbBuildsManager = new rhit.FbBuildsManager(uid);
 		rhit.buildValuesManager = new rhit.BuildValuesManager(buildId);
 
 		document.querySelector("#saveBuild").onclick = (event) => {
 			let build = rhit.buildValuesManager.getCurrentBuild();
-			rhit.fbBuildsManager.add(build);
-			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+			console.log(build);
+			rhit.fbBuildsManager.add(build).then(() => {
+				window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+			});
 		}
 	}
 }
