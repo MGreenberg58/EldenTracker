@@ -482,7 +482,7 @@ rhit.BuildValuesManager = class {
 		this.endurance = build.endurance;
 		this.strength = build.strength;
 		this.dexterity = build.dexterity;
-		this.intelligence = build.intelligance;
+		this.intelligence = build.intelligence;
 		this.faith = build.faith;
 		this.arcane = build.arcane;
 		this.calcValues();
