@@ -118,7 +118,7 @@ rhit.FbBuildsManager = class {
 		this._unsubscribe = null;
 	}
 	add(build) {
-		this._ref.add({
+		this._ref.add({		
 			   "name": build.name,
 			   "isPublic": build.isPublic,
 			   "vigor": build.vigor,
@@ -140,7 +140,6 @@ rhit.FbBuildsManager = class {
 	}
 	beginListening(changeListener) {
 		let query = this._ref.orderBy("name").limit(50);
-		console.log("sdfdjksalffsfdlklkfdsfslkjfdslkjfs", this._uid);
 		if (this._uid) {
 			query = query.where("author", "==", this._uid);
 		}
@@ -164,8 +163,6 @@ rhit.FbBuildsManager = class {
 	}
 	getBuildAtIndex(index) {
 		const snapshot = this._documentSnapshots[index];
-		console.log(snapshot);
-		console.log(snapshot.name);
 		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
 	}
 }
@@ -174,6 +171,7 @@ rhit.FbSingleBuildManager = class {
 	constructor(buildId) {
 		this._documentSnapshot = {};
 		this._unsubscribe = null;
+		this._buildId = buildId;
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS).doc(buildId);
 		console.log(`Listening to ${this._ref.path}`);
 	}
@@ -188,21 +186,29 @@ rhit.FbSingleBuildManager = class {
 			}
 		});
 	}
-	stopListening() {
-		this._unsubscribe();
-	}
 	update(build) {
 		this._ref.update({
-			//TODO: stuff here
-			[rhit.FB_KEY_CAPTION]: caption,
-			[rhit.FB_KEY_LAST_TOUCHED]: firebase.firestore.Timestamp.now(),
+			"name": build.name,
+			"isPublic": build.isPublic,
+			"vigor": build.vigor,
+			"mind": build.mind,
+			"endurance": build.endurance,
+			"strength": build.strength,
+			"dexterity": build.dexterity,
+			"intelligence": build.intelligence,
+			"faith": build.faith,
+			"arcane": build.arcane,
+			"author": rhit.fbAuthManager.uid,
+			"lastTouched": firebase.firestore.Timestamp.now(),
 		}).then((docRef) => {
 			console.log("Doc written with ID: ", docRef.id);
-		}).catch(function (error) {
+		}).catch(function(error) {
 			console.error("Error adding doc: ", error);
 		});
 	}
-
+	stopListening() {
+		this._unsubscribe();
+	}
 	delete() {
 		return this._ref.delete();
 	}
@@ -210,7 +216,13 @@ rhit.FbSingleBuildManager = class {
 }
 
 rhit.UserPageController = class {
-	constructor() {
+	constructor(uid) {
+		rhit.fbBuildsManager = new rhit.FbBuildsManager(uid);
+
+		document.getElementById("newBuild").onclick = (event) => {
+			window.location.href = "/create.html";
+		}
+
 		rhit.fbBuildsManager.beginListening(this.updateList.bind(this));
 	}
 	updateList() {
@@ -248,7 +260,8 @@ rhit.UserPageController = class {
 }
 
 rhit.BuildValuesManager = class {
-	constructor() {
+	constructor(buildId) {
+		this.id = buildId;
 		this.name = '';
 		this.level = 1,
 		this.cost = 0,
@@ -410,6 +423,8 @@ rhit.BuildValuesManager = class {
 		})
 	}
 	fillValues() {
+		document.querySelector("#nameField").value = this.name;
+		document.querySelector("#isPublicField").checked = this.isPublic;
 		document.querySelector("#levelValue").innerHTML = this.level;
 		document.querySelector("#runesValue").innerHTML = this.cost;
 		document.querySelector("#vigorValue").innerHTML = this.vigor;
@@ -449,7 +464,7 @@ rhit.BuildValuesManager = class {
 		let faith = document.querySelector("#faithValue").innerHTML;
 		let arcane = document.querySelector("#arcaneValue").innerHTML;
 	
-		return new rhit.Build(name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor);
+		return new rhit.Build(this.id, name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor);
 	}
 	setCurrentBuild(build) {
 		this.name = build.name;
@@ -467,6 +482,45 @@ rhit.BuildValuesManager = class {
 	}
 }
 
+rhit.EditPageController = class {
+	constructor(id) {
+		rhit.fbSingleBuildManager = new rhit.FbSingleBuildManager(id);
+		rhit.buildValuesManager = new rhit.BuildValuesManager(id);
+
+		firebase.firestore().collection("Builds").doc(id).get().then((doc) => {
+			console.log(doc.id);
+			const build = new rhit.Build(doc.id, doc.data().name, doc.data().isPublic, doc.data().arcane, doc.data().dexterity, doc.data().endurance, doc.data().faith, doc.data().intelligence, doc.data().mind, doc.data().strength, doc.data().vigor);
+			console.log(build);
+			rhit.buildValuesManager.setCurrentBuild(build);
+		});
+	
+		document.querySelector("#saveBuild").onclick = (event) => {
+			let build = rhit.buildValuesManager.getCurrentBuild();
+			console.log(build);
+			rhit.fbSingleBuildManager.update(build);
+			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+		}
+
+		document.querySelector("#deleteBuild").onclick = (event) => {
+			//TODO: an are you sure message before complete deletion
+			rhit.fbSingleBuildManager.delete();
+		}
+	}
+}
+
+rhit.CreatePageController = class {
+	constructor(uid, buildId) {
+		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
+		rhit.buildValuesManager = new rhit.BuildValuesManager(buildId);
+
+		document.querySelector("#saveBuild").onclick = (event) => {
+			let build = rhit.buildValuesManager.getCurrentBuild();
+			rhit.fbBuildsManager.add(build);
+			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+		}
+	}
+}
+
 rhit.checkForRedirects = function () {
 
 	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
@@ -479,42 +533,21 @@ rhit.initializePage = function () {
 
 	if (document.querySelector("#userPage")) {
 		const uid = urlParams.get("uid");
-		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
-		new rhit.UserPageController();
+
+		new rhit.UserPageController(uid);
 	}
 
 	if (document.querySelector("#createPage")) {
 		const uid = urlParams.get("uid");
 		const buildId = urlParams.get("id");
-		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
-		rhit.buildValuesManager = new rhit.BuildValuesManager();
 		
-		document.querySelector("#saveBuild").onclick = (event) => {
-			let build = rhit.buildValuesManager.getCurrentBuild();
-			rhit.fbBuildsManager.add(build);
-			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
-		}
-		
+		new rhit.CreatePageController(uid, buildId);
 	}
 
 	if (document.querySelector("#editPage")) {
-		const uid = urlParams.get("uid");
 		const buildId = urlParams.get("id");
-		rhit.fbBuildsManager = new this.FbBuildsManager(uid);
-		rhit.buildValuesManager = new rhit.BuildValuesManager();
 
-		const doc = collection('Builds').doc(buildId).get();
-
-		const build = new rhit.Build(doc.id, doc.get("name"), doc.get("isPublic"), doc.get("arcane"), doc.get("dexterity"), doc.get("endurance"), doc.get("faith"), doc.get("intelligence"), doc.get("mind"), doc.get("strength"), doc.get("vigor"));
-		rhit.buildValuesManager.setCurrentBuild(build);
-
-		document.querySelector("#saveBuild").onclick = (event) => {
-			collection("Builds").doc(buildId).delete();
-			let build = rhit.buildValuesManager.getCurrentBuild();
-			rhit.fbBuildsManager.add(build);
-			window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
-		}
-		
+		new rhit.EditPageController(buildId);
 	}
 
 	if (document.querySelector("#loginPage")) {
@@ -527,12 +560,6 @@ rhit.initializePage = function () {
 
 		document.getElementById("closeSplash").onclick = (event) => {
 			document.getElementById("splashbg").style.display = "none";
-		}
-	}
-
-	if (document.querySelector("#newBuild")) {
-		document.getElementById("newBuild").onclick = (event) => {
-			window.location.href = "/create.html";
 		}
 	}
 
