@@ -437,6 +437,7 @@ rhit.BuildValuesManager = class {
 					this.focus += leveldata[i].focus;
 					this.vitality += leveldata[i].vitality;
 				}
+				this.fillValues();
 			})
 
 			const sheet1 = firebase.database().ref("Sheet1");
@@ -475,6 +476,7 @@ rhit.BuildValuesManager = class {
 					this.holy += leveldata[i].holy;
 					this.vitality += leveldata[i].vitality;
 				}
+				this.fillValues();
 			})
 			resolve();
 			return;
