@@ -278,6 +278,12 @@ rhit.UserPageController = class {
 		for (let i = 0; i < rhit.fbUserBuildsManager.length; i++) {
 			const build = rhit.fbUserBuildsManager.getBuildAtIndex(i);
 			const card = this._createCard(build);
+			let pic = "Radahn";
+			if(build.pic != null) {
+				pic = build.pic;
+			}
+			card.style.background = `url("../images/sets/${pic}.png") top center no-repeat, rgba(0, 0, 0, 0.8)`;
+			card.style.backgroundSize = "250px";
 
 			card.onclick = (event) => {
 				//TODO: some other stuff here maybe
@@ -299,13 +305,17 @@ rhit.UserPageController = class {
 	_createCard(build) {
 		return htmlToElement(
 			`<div class="pin">
-			<p class="card-text text-center">${build.name}</p>
+			<div class="cardstats">${build.vigor}/${build.mind}/${build.endurance}/${build.strength}/${build.dexterity}/${build.intelligence}/${build.faith}/${build.arcane}</div>
+			<div class="cardname">${build.name}</div>
 		</div>`);
 	}
 }
 
 rhit.BuildValuesManager = class {
 	constructor(buildId) {
+		if (!rhit.fbAuthManager.isSignedIn) {
+			document.getElementById("saveBuild").style.display = "none";
+		}
 		this.id = buildId;
 		this.name = '';
 		this.level = 1,
@@ -602,6 +612,10 @@ rhit.MainPageController = class {
 	constructor() {
 		rhit.fbPublicBuildsManager = new rhit.FbPublicBuildsManager();
 
+		document.getElementById("newBuild").onclick = (event) => {
+			window.location.href = "/create.html";
+		}
+
 		if (rhit.fbAuthManager.isSignedIn) {
 			document.getElementById("splashbg").style.display = "none";
 		} else {
@@ -622,6 +636,12 @@ rhit.MainPageController = class {
 		for (let i = 0; i < rhit.fbPublicBuildsManager.length; i++) {
 			const build = rhit.fbPublicBuildsManager.getBuildAtIndex(i);
 			const card = this._createCard(build);
+			let pic = "Radahn";
+			if(build.pic != null) {
+				pic = build.pic;
+			}
+			card.style.background = `url("../images/sets/${pic}.png") top center no-repeat, rgba(0, 0, 0, 0.8)`;
+			card.style.backgroundSize = "250px";
 
 			card.onclick = (event) => {
 				//TODO: some other stuff here maybe
@@ -637,15 +657,13 @@ rhit.MainPageController = class {
 		list.removeAttribute("id");
 		list.hidden = true;
 		list.parentElement.appendChild(newList);
-
-		
-
 	}
 
 	_createCard(build) {
 		return htmlToElement(
 			`<div class="pin">
-			<p class="card-text text-center">${build.name}</p>
+			<div class="cardstats">${build.vigor}/${build.mind}/${build.endurance}/${build.strength}/${build.dexterity}/${build.intelligence}/${build.faith}/${build.arcane}</div>
+			<div class="cardname">${build.name}</div>
 		</div>`);
 	}
 }
