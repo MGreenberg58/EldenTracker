@@ -313,9 +313,6 @@ rhit.UserPageController = class {
 
 rhit.BuildValuesManager = class {
 	constructor(buildId) {
-		if (!rhit.fbAuthManager.isSignedIn) {
-			document.getElementById("saveBuild").style.display = "none";
-		}
 		this.id = buildId;
 		this.name = '';
 		this.level = 1,
@@ -369,8 +366,9 @@ rhit.BuildValuesManager = class {
 		this[stat]--;
 		this.level--;
 		this.updateButtonColors();
-		this.calcValues();
-		this.fillValues();
+		this.calcValues().then((params) => {
+			this.fillValues();
+		});
 	}
 	incrementValue(stat) {
 		if(this[stat] == 99) {
@@ -380,8 +378,9 @@ rhit.BuildValuesManager = class {
 		this[stat]++;
 		this.level++;
 		this.updateButtonColors();
-		this.calcValues();
-		this.fillValues();
+		this.calcValues().then((params) => {
+			this.fillValues();
+		});
 	}
 	updateButtonColors() {
 		let decrementors = document.querySelectorAll("#decrement");
@@ -404,77 +403,81 @@ rhit.BuildValuesManager = class {
 		})
 	}
 	calcValues() {
-		this.cost = 0;
-		this.hp = 414;
-		this.fp = 68;
-		this.stamina = 92;
-		this.load = 48.2;
-		this.discovery = 110;
-		this.armament = 115;
-		this.casting = 210;
-		this.physical = 75;
-		this.magic = 91;
-		this.fire = 78;
-		this.lightning = 71;
-		this.holy = 91;
-		this.immunity = 90;
-		this.robustness = 90;
-		this.focus = 90;
-		this.vitality = 100;
-		const sheet2 = firebase.database().ref("Sheet2");
-		sheet2.on('value', (snapshot) => {
-			const leveldata = snapshot.val();
+		return new Promise((resolve, reject) => {
+			this.cost = 0;
+			this.hp = 414;
+			this.fp = 68;
+			this.stamina = 92;
+			this.load = 48.2;
+			this.discovery = 110;
+			this.armament = 115;
+			this.casting = 210;
+			this.physical = 75;
+			this.magic = 91;
+			this.fire = 78;
+			this.lightning = 71;
+			this.holy = 91;
+			this.immunity = 90;
+			this.robustness = 90;
+			this.focus = 90;
+			this.vitality = 100;
+			const sheet2 = firebase.database().ref("Sheet2");
+			sheet2.on('value', (snapshot) => {
+				const leveldata = snapshot.val();
 
-			for(let i = 0; i < this.level - 1; i++) {
-				this.cost += leveldata[i].runes;
-				this.physical += leveldata[i].physical;
-				this.magic += leveldata[i].magic;
-				this.fire += leveldata[i].fire;
-				this.lightning += leveldata[i].lightning;
-				this.holy += leveldata[i].holy;
-				this.immunity += leveldata[i].immunity;
-				this.robustness += leveldata[i].robustness;
-				this.focus += leveldata[i].focus;
-				this.vitality += leveldata[i].vitality;
-			}
-		})
+				for(let i = 0; i < this.level - 1; i++) {
+					this.cost += leveldata[i].runes;
+					this.physical += leveldata[i].physical;
+					this.magic += leveldata[i].magic;
+					this.fire += leveldata[i].fire;
+					this.lightning += leveldata[i].lightning;
+					this.holy += leveldata[i].holy;
+					this.immunity += leveldata[i].immunity;
+					this.robustness += leveldata[i].robustness;
+					this.focus += leveldata[i].focus;
+					this.vitality += leveldata[i].vitality;
+				}
+			})
 
-		const sheet1 = firebase.database().ref("Sheet1");
-		sheet1.on('value', (snapshot) => {
-			const leveldata = snapshot.val();
+			const sheet1 = firebase.database().ref("Sheet1");
+			sheet1.on('value', (snapshot) => {
+				const leveldata = snapshot.val();
 
-			for(let i = 0; i < this.vigor - 10; i++) {
-				this.hp += leveldata[i].hp;
-				this.fire += leveldata[i].fire;
-				this.immunity += leveldata[i].immunity;
-			}
-			for(let i = 0; i < this.mind - 10; i++) {
-				this.fp += leveldata[i].fp;
-				this.focus += leveldata[i].focus;
-			}
-			for(let i = 0; i < this.endurance - 10; i++) {
-				this.stamina += leveldata[i].stamina;
-				this.load = parseFloat((this.load + leveldata[i].load).toFixed(1));
-				this.robustness += leveldata[i].robustness;
-			}
-			for(let i = 0; i < this.strength - 10; i++) {
-				this.physical += leveldata[i].physical;
-				this.armament += leveldata[i].strarmament;
-			}
-			for(let i = 0; i < this.dexterity - 10; i++) {
-				this.armament += leveldata[i].dexarmament;
-			}
-			for(let i = 0; i < this.intelligence - 10; i++) {
-				this.magic += leveldata[i].magic;
-			}
-			for(let i = 0; i < this.faith - 10; i++) {
-				this.casting += leveldata[i].casting;
-			}
-			for(let i = 0; i < this.arcane - 10; i++) {
-				this.discovery += leveldata[i].discovery;
-				this.holy += leveldata[i].holy;
-				this.vitality += leveldata[i].vitality;
-			}
+				for(let i = 0; i < this.vigor - 10; i++) {
+					this.hp += leveldata[i].hp;
+					this.fire += leveldata[i].fire;
+					this.immunity += leveldata[i].immunity;
+				}
+				for(let i = 0; i < this.mind - 10; i++) {
+					this.fp += leveldata[i].fp;
+					this.focus += leveldata[i].focus;
+				}
+				for(let i = 0; i < this.endurance - 10; i++) {
+					this.stamina += leveldata[i].stamina;
+					this.load = parseFloat((this.load + leveldata[i].load).toFixed(1));
+					this.robustness += leveldata[i].robustness;
+				}
+				for(let i = 0; i < this.strength - 10; i++) {
+					this.physical += leveldata[i].physical;
+					this.armament += leveldata[i].strarmament;
+				}
+				for(let i = 0; i < this.dexterity - 10; i++) {
+					this.armament += leveldata[i].dexarmament;
+				}
+				for(let i = 0; i < this.intelligence - 10; i++) {
+					this.magic += leveldata[i].magic;
+				}
+				for(let i = 0; i < this.faith - 10; i++) {
+					this.casting += leveldata[i].casting;
+				}
+				for(let i = 0; i < this.arcane - 10; i++) {
+					this.discovery += leveldata[i].discovery;
+					this.holy += leveldata[i].holy;
+					this.vitality += leveldata[i].vitality;
+				}
+			})
+			resolve();
+			return;
 		})
 	}
 	fillValues() {
@@ -524,16 +527,20 @@ rhit.BuildValuesManager = class {
 	setCurrentBuild(build) {
 		this.name = build.name;
 		this.isPublic = build.isPublic;
-		this.vigor = build.vigor;
-		this.mind = build.mind;
-		this.endurance = build.endurance;
-		this.strength = build.strength;
-		this.dexterity = build.dexterity;
-		this.intelligence = build.intelligence;
-		this.faith = build.faith;
-		this.arcane = build.arcane;
-		this.calcValues();
-		this.fillValues();
+		this.vigor = parseInt(build.vigor);
+		this.mind = parseInt(build.mind);
+		this.endurance = parseInt(build.endurance);
+		this.strength = parseInt(build.strength);
+		this.dexterity = parseInt(build.dexterity);
+		this.intelligence = parseInt(build.intelligence);
+		this.faith = parseInt(build.faith);
+		this.arcane = parseInt(build.arcane);
+		this.level += this.vigor + this.mind + this.endurance + this.strength + this.dexterity + this.intelligence + this.faith + this.arcane - 80;
+		
+		this.updateButtonColors();
+		this.calcValues().then((params) => {
+			this.fillValues();
+		});
 	}
 }
 
@@ -580,10 +587,11 @@ rhit.BuildPageController = class {
 			}
 	
 			document.querySelector("#deleteBuild").onclick = (event) => {
-				//TODO: an are you sure message before complete deletion
-				rhit.fbSingleBuildManager.delete().then(() => {
-					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
-				});
+				if(confirm("Are you sure you would like to delete this build?")) {
+					rhit.fbSingleBuildManager.delete().then(() => {
+						window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+					});
+				}
 			}
 		}
 
@@ -597,14 +605,19 @@ rhit.CreatePageController = class {
 	constructor(uid, buildId) {
 		rhit.fbUserBuildsManager = new rhit.FbUserBuildsManager(uid);
 		rhit.buildValuesManager = new rhit.BuildValuesManager(buildId);
-
-		document.querySelector("#saveBuild").onclick = (event) => {
-			let build = rhit.buildValuesManager.getCurrentBuild();
-			console.log(build);
-			rhit.fbUserBuildsManager.add(build).then(() => {
-				window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
-			});
+		
+		if (!rhit.fbAuthManager.isSignedIn) {
+			document.getElementById("saveBuild").style.display = "none";
+		} else {
+			document.querySelector("#saveBuild").onclick = (event) => {
+				let build = rhit.buildValuesManager.getCurrentBuild();
+				console.log(build);
+				rhit.fbUserBuildsManager.add(build).then(() => {
+					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+				});
+			}
 		}
+		
 	}
 }
 
