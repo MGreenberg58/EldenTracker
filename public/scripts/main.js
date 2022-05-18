@@ -12,8 +12,9 @@ var rhit = rhit || {};
 /** globals */
 rhit.FB_COLLECTION_BUILDS = "Builds";
 
-rhit.fbBuildsManager = null;
-rhit.FbSingleBuildManager = null;
+rhit.fbUserBuildsManager = null;
+rhit.fbSingleBuildManager = null;
+rhit.fbPublicBuildsManager = null;
 rhit.buildValuesManager = null;
 
 function htmlToElement(html) {
@@ -110,7 +111,7 @@ rhit.Build = class {
 	}
 }
 
-rhit.FbBuildsManager = class {
+rhit.FbUserBuildsManager = class {
 	constructor(uid) {
 		this._uid = uid;
 		this._documentSnapshots = [];
@@ -171,6 +172,38 @@ rhit.FbBuildsManager = class {
 	}
 }
 
+rhit.FbPublicBuildsManager = class {
+	constructor() {
+		this._documentSnapshots = [];
+		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS);
+		this._unsubscribe = null;
+	}
+	beginListening(changeListener) {
+		let query = this._ref.where("isPublic", "==", true).limit(50);
+	
+		this._unsubscribe = query.onSnapshot((querySnapshot) => {
+			console.log("Database Update");
+
+			this._documentSnapshots = querySnapshot.docs;
+
+			querySnapshot.forEach((doc) => {
+				console.log(doc.data());
+			});
+			changeListener();
+		});
+	}
+	stopListening() {
+		this._unsubscribe();
+	}
+	get length() {
+		return this._documentSnapshots.length;
+	}
+	getBuildAtIndex(index) {
+		const snapshot = this._documentSnapshots[index];
+		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
+	}
+}
+
 rhit.FbSingleBuildManager = class {
 	constructor(buildId) {
 		this._documentSnapshot = {};
@@ -205,11 +238,11 @@ rhit.FbSingleBuildManager = class {
 				"arcane": build.arcane,
 				"author": rhit.fbAuthManager.uid,
 				"lastTouched": firebase.firestore.Timestamp.now(),
-		 }).then(function (docRef) {
-			 console.log("Doc written with ID: ", docRef.id);
+		 }).then(() => {
+			 console.log("Doc updated with ID: ", this._buildId);
 			 resolve();
-		 }).catch(function (error) {
-			 console.error("Error adding doc: ", error);
+		 }).catch((error) => {
+			 console.error("Error updating doc: ", error);
 			 reject();
 		 });
 		});
@@ -218,35 +251,39 @@ rhit.FbSingleBuildManager = class {
 		this._unsubscribe();
 	}
 	delete() {
-		return this._ref.delete();
+		return new Promise((resolve, reject) => {
+			this._ref.delete();
+			resolve();
+		});
 	}
 
 }
 
 rhit.UserPageController = class {
 	constructor(uid) {
-		rhit.fbBuildsManager = new rhit.FbBuildsManager(uid);
+		rhit.fbUserBuildsManager = new rhit.FbUserBuildsManager(uid);
 
 		document.getElementById("newBuild").onclick = (event) => {
 			window.location.href = "/create.html";
 		}
 
-		rhit.fbBuildsManager.beginListening(this.updateList.bind(this));
+		rhit.fbUserBuildsManager.beginListening(this.updateList.bind(this));
 	}
 	updateList() {
 		console.log("Updating List");
-		console.log(`Num Builds: ${rhit.fbBuildsManager.length}`);
+		console.log(`Num Builds: ${rhit.fbUserBuildsManager.length}`);
 
 		const newList = htmlToElement('<div id="buildListContainer"></div>');
 
-		for (let i = 0; i < rhit.fbBuildsManager.length; i++) {
-			const build = rhit.fbBuildsManager.getBuildAtIndex(i);
+		for (let i = 0; i < rhit.fbUserBuildsManager.length; i++) {
+			const build = rhit.fbUserBuildsManager.getBuildAtIndex(i);
 			const card = this._createCard(build);
 
 			card.onclick = (event) => {
 				//TODO: some other stuff here maybe
 				console.log(`You clicked a card: ${build.id}`);
-				window.location.href = `/edit.html?id=${build.id}`;
+				window.location.href = `/build.html?id=${build.id}`;
+				sessionStorage.setItem("isPublicList", "false");
 			};
 
 			newList.appendChild(card);
@@ -490,7 +527,7 @@ rhit.BuildValuesManager = class {
 	}
 }
 
-rhit.EditPageController = class {
+rhit.BuildPageController = class {
 	constructor(id) {
 		rhit.fbSingleBuildManager = new rhit.FbSingleBuildManager(id);
 		rhit.buildValuesManager = new rhit.BuildValuesManager(id);
@@ -501,34 +538,115 @@ rhit.EditPageController = class {
 			console.log(build);
 			rhit.buildValuesManager.setCurrentBuild(build);
 		});
-	
-		document.querySelector("#saveBuild").onclick = (event) => {
-			let build = rhit.buildValuesManager.getCurrentBuild();
-			console.log(build);
-			rhit.fbSingleBuildManager.update(build).then(() => {
-				window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+
+		const inc = document.querySelectorAll("#decrement");
+		const dec = document.querySelectorAll("#increment");
+		const buttons = [...inc,...dec];
+
+		if (sessionStorage.getItem("isPublicList") == "true") {
+			document.querySelector("#saveBuild").hidden = true;
+			document.querySelector("#deleteBuild").hidden = true;
+			document.querySelector("#isPublicLine").hidden = true;
+
+			buttons.forEach((button) => {
+				button.style.display = "none";
 			});
+
+		} else {
+			document.querySelector("#saveBuild").hidden = false;
+			document.querySelector("#deleteBuild").hidden = false;
+			document.querySelector("#isPublicLine").hidden = false;
+
+			buttons.forEach((button) => {
+				button.style.display = "block";
+			});
+ 
+			document.querySelector("#saveBuild").onclick = (event) => {
+				let build = rhit.buildValuesManager.getCurrentBuild();
+				console.log(build);
+				rhit.fbSingleBuildManager.update(build).then(() => {
+					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+				});
+			}
+	
+			document.querySelector("#deleteBuild").onclick = (event) => {
+				//TODO: an are you sure message before complete deletion
+				rhit.fbSingleBuildManager.delete().then(() => {
+					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
+				});
+			}
 		}
 
-		document.querySelector("#deleteBuild").onclick = (event) => {
-			//TODO: an are you sure message before complete deletion
-			rhit.fbSingleBuildManager.delete();
-		}
+		
+	
+		
 	}
 }
 
 rhit.CreatePageController = class {
 	constructor(uid, buildId) {
-		rhit.fbBuildsManager = new rhit.FbBuildsManager(uid);
+		rhit.fbUserBuildsManager = new rhit.FbUserBuildsManager(uid);
 		rhit.buildValuesManager = new rhit.BuildValuesManager(buildId);
 
 		document.querySelector("#saveBuild").onclick = (event) => {
 			let build = rhit.buildValuesManager.getCurrentBuild();
 			console.log(build);
-			rhit.fbBuildsManager.add(build).then(() => {
+			rhit.fbUserBuildsManager.add(build).then(() => {
 				window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
 			});
 		}
+	}
+}
+
+rhit.MainPageController = class {
+	constructor() {
+		rhit.fbPublicBuildsManager = new rhit.FbPublicBuildsManager();
+
+		if (rhit.fbAuthManager.isSignedIn) {
+			document.getElementById("splashbg").style.display = "none";
+		} else {
+			document.getElementById("closeSplash").onclick = (event) => {
+				document.getElementById("splashbg").style.display = "none";
+			}
+		}
+
+		rhit.fbPublicBuildsManager.beginListening(this.updateList.bind(this));
+	}
+
+	updateList() {
+		console.log("Updating List");
+		console.log(`Num Builds: ${rhit.fbPublicBuildsManager.length}`);
+
+		const newList = htmlToElement('<div id="buildListContainer"></div>');
+
+		for (let i = 0; i < rhit.fbPublicBuildsManager.length; i++) {
+			const build = rhit.fbPublicBuildsManager.getBuildAtIndex(i);
+			const card = this._createCard(build);
+
+			card.onclick = (event) => {
+				//TODO: some other stuff here maybe
+				console.log(`You clicked a card: ${build.id}`);
+				window.location.href = `/build.html?id=${build.id}`;
+				sessionStorage.setItem("isPublicList", "true");
+			};
+
+			newList.appendChild(card);
+		}
+
+		const list = document.querySelector("#buildListContainer");
+		list.removeAttribute("id");
+		list.hidden = true;
+		list.parentElement.appendChild(newList);
+
+		
+
+	}
+
+	_createCard(build) {
+		return htmlToElement(
+			`<div class="pin">
+			<p class="card-text text-center">${build.name}</p>
+		</div>`);
 	}
 }
 
@@ -555,10 +673,10 @@ rhit.initializePage = function () {
 		new rhit.CreatePageController(uid, buildId);
 	}
 
-	if (document.querySelector("#editPage")) {
+	if (document.querySelector("#buildPage")) {
 		const buildId = urlParams.get("id");
 
-		new rhit.EditPageController(buildId);
+		new rhit.BuildPageController(buildId);
 	}
 
 	if (document.querySelector("#loginPage")) {
@@ -567,11 +685,8 @@ rhit.initializePage = function () {
 	}
 
 	if (document.querySelector("#mainPage")) {
-		if (rhit.fbAuthManager.isSignedIn) document.getElementById("splashbg").style.display = "none";
 
-		document.getElementById("closeSplash").onclick = (event) => {
-			document.getElementById("splashbg").style.display = "none";
-		}
+		new rhit.MainPageController();
 	}
 
 	rhit.navManager = new rhit.NavManager();
