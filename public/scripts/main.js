@@ -570,7 +570,7 @@ rhit.BuildPageController = class {
 		const buttons = [...inc,...dec];
 
 		if (sessionStorage.getItem("isPublicList") == "true") {
-			document.querySelector("#navTitle").innerHTML = `${rhit.fbAuthManager.username}'s Build`;
+			document.querySelector("#navTitle").innerHTML = `${rhit.fbAuthManager.uid}'s Build`;
 
 			document.querySelector("#saveBuild").hidden = true;
 			document.querySelector("#deleteBuild").hidden = true;
