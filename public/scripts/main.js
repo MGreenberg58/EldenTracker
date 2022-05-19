@@ -645,6 +645,9 @@ rhit.MainPageController = class {
 				document.getElementById("splashbg").style.display = "none";
 			}
 		}
+		document.getElementById("newBuild").onclick = (event) => {
+			window.location.href = "/create.html";
+		}
 
 		rhit.fbPublicBuildsManager.beginListening(this.updateList.bind(this));
 	}
