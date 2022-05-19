@@ -255,7 +255,7 @@ rhit.FbSingleBuildManager = class {
 	delete() {
 		return this._ref.delete();
 	}
-	get author() {
+	getAuthor() {
 		return new Promise((resolve, reject) => {
 			this._ref.get().then((docSnapshot) => {
 				resolve(docSnapshot.get("author"));
@@ -570,7 +570,10 @@ rhit.BuildPageController = class {
 		const buttons = [...inc,...dec];
 
 		if (sessionStorage.getItem("isPublicList") == "true") {
-			document.querySelector("#navTitle").innerHTML = `${rhit.fbAuthManager.uid}'s Build`;
+			rhit.fbSingleBuildManager.getAuthor().then((author) => {
+				document.querySelector("#navTitle").innerHTML = `${author}'s Build`;
+			});
+			
 
 			document.querySelector("#saveBuild").hidden = true;
 			document.querySelector("#deleteBuild").hidden = true;
