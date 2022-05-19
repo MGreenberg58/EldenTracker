@@ -92,9 +92,9 @@ rhit.FbAuthManager = class {
 	get uid() {
 		return this._user.uid;
 	}
-	get username() {
-		return this._user.displayName;
-	}
+	// get username() {
+	// 	return this._user.displayName;
+	// }
 }
 
 rhit.Build = class {
