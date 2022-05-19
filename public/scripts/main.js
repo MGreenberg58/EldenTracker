@@ -92,6 +92,9 @@ rhit.FbAuthManager = class {
 	get uid() {
 		return this._user.uid;
 	}
+	get username() {
+		return this._user.displayName;
+	}
 }
 
 rhit.Build = class {
@@ -206,7 +209,6 @@ rhit.FbPublicBuildsManager = class {
 
 rhit.FbSingleBuildManager = class {
 	constructor(buildId) {
-		this._documentSnapshot = {};
 		this._unsubscribe = null;
 		this._buildId = buildId;
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS).doc(buildId);
@@ -251,12 +253,18 @@ rhit.FbSingleBuildManager = class {
 		this._unsubscribe();
 	}
 	delete() {
+		return this._ref.delete();
+	}
+	get author() {
 		return new Promise((resolve, reject) => {
-			this._ref.delete();
-			resolve();
+			this._ref.get().then((docSnapshot) => {
+				resolve(docSnapshot.get("author"));
+				return;
+			}).catch(() => {
+				reject();
+			});
 		});
 	}
-
 }
 
 rhit.UserPageController = class {
@@ -552,7 +560,6 @@ rhit.BuildPageController = class {
 		rhit.buildValuesManager = new rhit.BuildValuesManager(id);
 
 		firebase.firestore().collection("Builds").doc(id).get().then((doc) => {
-			console.log(doc.id);
 			const build = new rhit.Build(doc.id, doc.data().name, doc.data().isPublic, doc.data().arcane, doc.data().dexterity, doc.data().endurance, doc.data().faith, doc.data().intelligence, doc.data().mind, doc.data().strength, doc.data().vigor);
 			console.log(build);
 			rhit.buildValuesManager.setCurrentBuild(build);
@@ -563,6 +570,8 @@ rhit.BuildPageController = class {
 		const buttons = [...inc,...dec];
 
 		if (sessionStorage.getItem("isPublicList") == "true") {
+			document.querySelector("#navTitle").innerHTML = `${rhit.fbAuthManager.username}'s Build`;
+
 			document.querySelector("#saveBuild").hidden = true;
 			document.querySelector("#deleteBuild").hidden = true;
 			document.querySelector("#isPublicLine").hidden = true;
@@ -572,6 +581,8 @@ rhit.BuildPageController = class {
 			});
 
 		} else {
+			document.querySelector("#navTitle").innerHTML = "Edit Build";
+
 			document.querySelector("#saveBuild").hidden = false;
 			document.querySelector("#deleteBuild").hidden = false;
 			document.querySelector("#isPublicLine").hidden = false;
@@ -626,10 +637,6 @@ rhit.CreatePageController = class {
 rhit.MainPageController = class {
 	constructor() {
 		rhit.fbPublicBuildsManager = new rhit.FbPublicBuildsManager();
-
-		document.getElementById("newBuild").onclick = (event) => {
-			window.location.href = "/create.html";
-		}
 
 		if (rhit.fbAuthManager.isSignedIn) {
 			document.getElementById("splashbg").style.display = "none";
@@ -686,7 +693,7 @@ rhit.MainPageController = class {
 rhit.checkForRedirects = function () {
 
 	if (document.querySelector("#loginPage") && rhit.fbAuthManager.isSignedIn) {
-		window.location.href = "/userpage.html";
+		window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
 	}
 }
 
@@ -713,7 +720,7 @@ rhit.initializePage = function () {
 	}
 
 	if (document.querySelector("#loginPage")) {
-		console.log("Login Page");
+		
 		new rhit.LoginPageController();
 	}
 
@@ -810,39 +817,38 @@ rhit.FbUserManager = class {
 	addNewUserMaybe(uid, name, photoUrl) {
 		const userRef = this._collectionRef.doc(uid);
 
-		return userRef.get().then((doc) => {
+		return new Promise((resolve, reject) => {
+			userRef.get().then((doc) => {
 				if (doc.exists) {
 					console.log("User already exists: ", doc.data());
 				} else {
 					console.log("Creating user!");
 
-					return userRef.set({
-							[rhit.FB_KEY_NAME]: name,
-							[rhit.FB_KEY_PHOTO_URL]: photoUrl
+						userRef.set({
+							"name": name,
+							"photoURL": photoUrl
 						})
 						.then(function () {
 							console.log("Doc written");
 						})
 						.catch(function (error) {
 							console.log("Error writing doc: ", error);
+							reject();
 						});
 				}
 			})
 			.catch((err) => {
 				console.log("Error: ", err);
+				reject();
 			});
+			resolve();
+		});
+		 
 	}
-	beginListening(uid, changeListener) {
 
-	}
 	stopListening() {
 		this._unsubscribe();
 	}
-	
-	updateName(name) {
-
-	}
-
 }
 
 rhit.createUserObjectIfNeeded = function () {
