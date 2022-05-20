@@ -142,6 +142,7 @@ rhit.FbUserBuildsManager = class {
 				"faith": build.faith,
 				"arcane": build.arcane,
 				"author": rhit.fbAuthManager.uid,
+				"authname": rhit.fbAuthManager.username,
 				"lastTouched": firebase.firestore.Timestamp.now(),
 		 }).then(function (docRef) {
 			//  console.log("Doc written with ID: ", docRef.id);
@@ -219,6 +220,7 @@ rhit.FbSingleBuildManager = class {
 				"faith": build.faith,
 				"arcane": build.arcane,
 				"author": rhit.fbAuthManager.uid,
+				"authname": rhit.fbAuthManager.username,
 				"lastTouched": firebase.firestore.Timestamp.now(),
 		 }).then(() => {
 			//  console.log("Doc updated with ID: ", this._buildId);
@@ -239,6 +241,16 @@ rhit.FbSingleBuildManager = class {
 		return new Promise((resolve, reject) => {
 			this._ref.get().then((docSnapshot) => {
 				resolve(docSnapshot.get("author"));
+				return;
+			}).catch(() => {
+				reject();
+			});
+		});
+	}
+	getAuthName() {
+		return new Promise((resolve, reject) => {
+			this._ref.get().then((docSnapshot) => {
+				resolve(docSnapshot.get("authname"));
 				return;
 			}).catch(() => {
 				reject();
@@ -552,8 +564,8 @@ rhit.BuildPageController = class {
 		const buttons = [...inc,...dec];
 
 		if (sessionStorage.getItem("isPublicList") == "true") {
-			rhit.fbSingleBuildManager.getAuthor().then((author) => {
-				document.querySelector("#navTitle").innerHTML = `${author}'s Build`;
+			rhit.fbSingleBuildManager.getAuthName().then((authName) => {
+				document.querySelector("#navTitle").innerHTML = `${authName}'s Build`;
 			});
 			
 
