@@ -1,12 +1,3 @@
-/**
- * @fileoverview
- * Provides the JavaScript interactions for all pages.
- *
- * @author 
- * PUT_YOUR_NAME_HERE
- */
-
-/** namespace. */
 var rhit = rhit || {};
 
 /** globals */
@@ -26,9 +17,7 @@ function htmlToElement(html) {
 
 rhit.LoginPageController = class {
 	constructor() {
-		document.querySelector("#rosefireBtn").onclick = (event) => {
-			rhit.fbAuthManager.signIn();
-		};
+		rhit.startFirebaseUI();
 	}
 }
 
@@ -50,40 +39,22 @@ rhit.FbAuthManager = class {
 				const photoURL = user.photoURL;
 				const phoneNum = user.phoneNumber;
 				const isAnon = user.isAnonymous;
-				console.log("User signed in with uid: ", uid);
-				console.log("displayName: ", displayName);
-				console.log("email: ", email);
-				console.log("photoURL: ", photoURL);
-				console.log("phoneNumber:", phoneNum);
-				console.log("isAnonymous: ", isAnon);
+				// console.log("User signed in with uid: ", uid);
+				// console.log("displayName: ", displayName);
+				// console.log("email: ", email);
+				// console.log("photoURL: ", photoURL);
+				// console.log("phoneNumber:", phoneNum);
+				// console.log("isAnonymous: ", isAnon);
 			} else {
-				console.log("No user signed in");
+				// console.log("No user signed in");
 			}
-		});
-	}
-	signIn() {
-		Rosefire.signIn("3588d83d-61f9-49df-8b06-9235642b5fb2", (err, rfUser) => {
-			if (err) {
-				console.log("Rosefire error!", err);
-				return;
-			}
-			console.log("Rosefire success!", rfUser);
-			firebase.auth().signInWithCustomToken(rfUser.token).catch((error) => {
-				const errorCode = error.code;
-				const errorMsg = error.message;
-				if (errorCode === "auth/invalid-custom-token") {
-					alert("Invalid Token");
-				} else {
-					console.error("Custom auth error", errorCode, errorMsg);
-				}
-			});
 		});
 	}
 	signOut() {
 		firebase.auth().signOut().then(function () {
-			console.log("You are signed out");
+			// console.log("You are signed out");
 		}).catch(function (error) {
-			console.error("Error Signing Out");
+			// console.error("Error Signing Out");
 		});
 	}
 	get isSignedIn() {
@@ -92,17 +63,28 @@ rhit.FbAuthManager = class {
 	get uid() {
 		return this._user.uid;
 	}
-	// get username() {
-	// 	return this._user.displayName;
-	// }
+	get username() {
+		return this._user.displayName;
+	}
+}
+
+rhit.startFirebaseUI = function() {
+	var uiConfig = {
+		signInSuccessUrl: `/index.html`,
+		signInOptions: [
+			firebase.auth.GoogleAuthProvider.PROVIDER_ID
+		]
+	};
+	const ui = new firebaseui.auth.AuthUI(firebase.auth());
+	ui.start('#firebaseui-auth-container', uiConfig);
 }
 
 rhit.Build = class {
-	constructor(id, name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor) {
+	constructor(id, name, isPublic, pic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor) {
 		this.id = id;
 		this.name = name;
-		// this.image = image;
 		this.isPublic = isPublic;
+		this.pic = pic;
 		this.arcane = arcane;
 		this.dexterity = dexterity;
 		this.endurance = endurance;
@@ -121,44 +103,16 @@ rhit.FbUserBuildsManager = class {
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS);
 		this._unsubscribe = null;
 	}
-	add(build) {
-		return new Promise((resolve, reject) => {
-			this._ref.add({		
-				"name": build.name,
-				"isPublic": build.isPublic,
-				"vigor": build.vigor,
-				"mind": build.mind,
-				"endurance": build.endurance,
-				"strength": build.strength,
-				"dexterity": build.dexterity,
-				"intelligence": build.intelligence,
-				"faith": build.faith,
-				"arcane": build.arcane,
-				"author": rhit.fbAuthManager.uid,
-				"lastTouched": firebase.firestore.Timestamp.now(),
-		 }).then(function (docRef) {
-			 console.log("Doc written with ID: ", docRef.id);
-			 resolve();
-		 }).catch(function (error) {
-			 console.error("Error adding doc: ", error);
-			 reject();
-		 });
-		});
-
-	}
 	beginListening(changeListener) {
-		let query = this._ref.orderBy("name").limit(50);
-		if (this._uid) {
-			query = query.where("author", "==", this._uid);
-		}
-
+		let query = this._ref.where("author", "==", this._uid).limit(50);
+	
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
-			console.log("Database Update");
+			// console.log("Database Update");
 
 			this._documentSnapshots = querySnapshot.docs;
 
 			querySnapshot.forEach((doc) => {
-				console.log(doc.data());
+				// console.log(doc.data());
 			});
 			changeListener();
 		});
@@ -171,7 +125,32 @@ rhit.FbUserBuildsManager = class {
 	}
 	getBuildAtIndex(index) {
 		const snapshot = this._documentSnapshots[index];
-		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
+		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("pic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
+	}
+	add(build) {
+		return new Promise((resolve, reject) => {
+			this._ref.add({		
+				"name": build.name,
+				"isPublic": build.isPublic,
+				"pic": build.pic,
+				"vigor": build.vigor,
+				"mind": build.mind,
+				"endurance": build.endurance,
+				"strength": build.strength,
+				"dexterity": build.dexterity,
+				"intelligence": build.intelligence,
+				"faith": build.faith,
+				"arcane": build.arcane,
+				"author": rhit.fbAuthManager.uid,
+				"lastTouched": firebase.firestore.Timestamp.now(),
+		 }).then(function (docRef) {
+			//  console.log("Doc written with ID: ", docRef.id);
+			 resolve();
+		 }).catch(function (error) {
+			//  console.error("Error adding doc: ", error);
+			 reject();
+		 });
+		});
 	}
 }
 
@@ -185,12 +164,12 @@ rhit.FbPublicBuildsManager = class {
 		let query = this._ref.where("isPublic", "==", true).limit(50);
 	
 		this._unsubscribe = query.onSnapshot((querySnapshot) => {
-			console.log("Database Update");
+			// console.log("Database Update");
 
 			this._documentSnapshots = querySnapshot.docs;
 
 			querySnapshot.forEach((doc) => {
-				console.log(doc.data());
+				// console.log(doc.data());
 			});
 			changeListener();
 		});
@@ -203,7 +182,7 @@ rhit.FbPublicBuildsManager = class {
 	}
 	getBuildAtIndex(index) {
 		const snapshot = this._documentSnapshots[index];
-		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
+		return new rhit.Build(snapshot.id, snapshot.get("name"), snapshot.get("isPublic"), snapshot.get("pic"), snapshot.get("arcane"), snapshot.get("dexterity"), snapshot.get("endurance"), snapshot.get("faith"), snapshot.get("intelligence"), snapshot.get("mind"), snapshot.get("strength"), snapshot.get("vigor"));
 	}
 }
 
@@ -212,16 +191,16 @@ rhit.FbSingleBuildManager = class {
 		this._unsubscribe = null;
 		this._buildId = buildId;
 		this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_BUILDS).doc(buildId);
-		console.log(`Listening to ${this._ref.path}`);
+		// console.log(`Listening to ${this._ref.path}`);
 	}
 	beginListening(changeListener) {
 		this._unsubscribe = this._ref.onSnapshot((doc) => {
 			if (doc.exists) {
-				console.log("Doc data: ", doc.data());
+				// console.log("Doc data: ", doc.data());
 				this._documentSnapshot = doc;
 				changeListener();
 			} else {
-				console.log("No doc exists");
+				// console.log("No doc exists");
 			}
 		});
 	}
@@ -230,6 +209,7 @@ rhit.FbSingleBuildManager = class {
 			this._ref.update({		
 				"name": build.name,
 				"isPublic": build.isPublic,
+				"pic": build.pic,
 				"vigor": build.vigor,
 				"mind": build.mind,
 				"endurance": build.endurance,
@@ -241,10 +221,10 @@ rhit.FbSingleBuildManager = class {
 				"author": rhit.fbAuthManager.uid,
 				"lastTouched": firebase.firestore.Timestamp.now(),
 		 }).then(() => {
-			 console.log("Doc updated with ID: ", this._buildId);
+			//  console.log("Doc updated with ID: ", this._buildId);
 			 resolve();
 		 }).catch((error) => {
-			 console.error("Error updating doc: ", error);
+			//  console.error("Error updating doc: ", error);
 			 reject();
 		 });
 		});
@@ -278,8 +258,8 @@ rhit.UserPageController = class {
 		rhit.fbUserBuildsManager.beginListening(this.updateList.bind(this));
 	}
 	updateList() {
-		console.log("Updating List");
-		console.log(`Num Builds: ${rhit.fbUserBuildsManager.length}`);
+		// console.log("Updating List");
+		// console.log(`Num Builds: ${rhit.fbUserBuildsManager.length}`);
 
 		const newList = htmlToElement('<div id="buildListContainer"></div>');
 
@@ -287,15 +267,14 @@ rhit.UserPageController = class {
 			const build = rhit.fbUserBuildsManager.getBuildAtIndex(i);
 			const card = this._createCard(build);
 			let pic = "Radahn";
-			if(build.pic != null) {
+			if(build.pic != null && build.pic != "") {
 				pic = build.pic;
 			}
 			card.style.background = `url("../images/sets/${pic}.png") top center no-repeat, rgba(0, 0, 0, 0.8)`;
 			card.style.backgroundSize = "250px";
 
 			card.onclick = (event) => {
-				//TODO: some other stuff here maybe
-				console.log(`You clicked a card: ${build.id}`);
+				// console.log(`You clicked a card: ${build.id}`);
 				window.location.href = `/build.html?id=${build.id}`;
 				sessionStorage.setItem("isPublicList", "false");
 			};
@@ -370,7 +349,7 @@ rhit.BuildValuesManager = class {
 		if(this[stat] == 10) {
 			return;
 		}
-		console.log("Decrementing " + stat);
+		// console.log("Decrementing " + stat);
 		this[stat]--;
 		this.level--;
 		this.updateButtonColors();
@@ -382,7 +361,7 @@ rhit.BuildValuesManager = class {
 		if(this[stat] == 99) {
 			return;
 		}
-		console.log("Incrementing " + stat);
+		// console.log("Incrementing " + stat);
 		this[stat]++;
 		this.level++;
 		this.updateButtonColors();
@@ -491,8 +470,6 @@ rhit.BuildValuesManager = class {
 		})
 	}
 	fillValues() {
-		document.querySelector("#nameField").value = this.name;
-		document.querySelector("#isPublicField").checked = this.isPublic;
 		document.querySelector("#levelValue").innerHTML = this.level;
 		document.querySelector("#runesValue").innerHTML = this.cost;
 		document.querySelector("#vigorValue").innerHTML = this.vigor;
@@ -523,6 +500,7 @@ rhit.BuildValuesManager = class {
 	getCurrentBuild() {
 		let name = document.querySelector("#nameField").value;
 		let isPublic = document.querySelector("#isPublicField").checked;
+		let pic = document.querySelector("#buildPic").value;
 		let vigor = document.querySelector("#vigorValue").innerHTML;
 		let mind = document.querySelector("#mindValue").innerHTML;
 		let endurance = document.querySelector("#enduranceValue").innerHTML;
@@ -532,11 +510,12 @@ rhit.BuildValuesManager = class {
 		let faith = document.querySelector("#faithValue").innerHTML;
 		let arcane = document.querySelector("#arcaneValue").innerHTML;
 	
-		return new rhit.Build(this.id, name, isPublic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor);
+		return new rhit.Build(this.id, name, isPublic, pic, arcane, dexterity, endurance, faith, intelligence, mind, strength, vigor);
 	}
 	setCurrentBuild(build) {
 		this.name = build.name;
 		this.isPublic = build.isPublic;
+		this.pic = build.pic;
 		this.vigor = parseInt(build.vigor);
 		this.mind = parseInt(build.mind);
 		this.endurance = parseInt(build.endurance);
@@ -550,6 +529,9 @@ rhit.BuildValuesManager = class {
 		this.updateButtonColors();
 		this.calcValues().then((params) => {
 			this.fillValues();
+			document.querySelector("#nameField").value = this.name;
+			document.querySelector("#isPublicField").checked = this.isPublic;
+			document.querySelector("#buildPic").value = this.pic;
 		});
 	}
 }
@@ -560,8 +542,8 @@ rhit.BuildPageController = class {
 		rhit.buildValuesManager = new rhit.BuildValuesManager(id);
 
 		firebase.firestore().collection("Builds").doc(id).get().then((doc) => {
-			const build = new rhit.Build(doc.id, doc.data().name, doc.data().isPublic, doc.data().arcane, doc.data().dexterity, doc.data().endurance, doc.data().faith, doc.data().intelligence, doc.data().mind, doc.data().strength, doc.data().vigor);
-			console.log(build);
+			const build = new rhit.Build(doc.id, doc.data().name, doc.data().isPublic, doc.data().pic, doc.data().arcane, doc.data().dexterity, doc.data().endurance, doc.data().faith, doc.data().intelligence, doc.data().mind, doc.data().strength, doc.data().vigor);
+			// console.log(build);
 			rhit.buildValuesManager.setCurrentBuild(build);
 		});
 
@@ -570,11 +552,11 @@ rhit.BuildPageController = class {
 		const buttons = [...inc,...dec];
 
 		if (sessionStorage.getItem("isPublicList") == "true") {
-			document.querySelector("#navTitle").innerHTML = `${rhit.fbAuthManager.username}'s Build`;
+			// document.querySelector("#navTitle").innerHTML = `${rhit.fbAuthManager.username}'s Build`;
 
 			document.querySelector("#saveBuild").hidden = true;
 			document.querySelector("#deleteBuild").hidden = true;
-			document.querySelector("#isPublicLine").hidden = true;
+			document.querySelector("#buildproperties").hidden = true;
 
 			buttons.forEach((button) => {
 				button.style.display = "none";
@@ -582,10 +564,18 @@ rhit.BuildPageController = class {
 
 		} else {
 			document.querySelector("#navTitle").innerHTML = "Edit Build";
-
 			document.querySelector("#saveBuild").hidden = false;
-			document.querySelector("#deleteBuild").hidden = false;
-			document.querySelector("#isPublicLine").hidden = false;
+			document.querySelector("#buildproperties").hidden = false;
+
+			let piclist = ["Alberich", "Albinauric", "All Knowing", "Aristocrat", "Astrologer", "Azur", "Bandit", "Banished Knight", "Battlemage", "Beast Champion", "Blackflame Monk", "Black Knife", "Blaidd", "Bloodhound", "Bloodsoaked", "Bloody Wolf", "Blue Cloth", "Blue Festive", "Blue Silver", "Briar", "Bullgate", "Carian Knight", "Chain", "Champion", "Cleanrot", "Commoner", "Confessor", "Consort", "Crucible Knight", "Crucible Tree", "Cuckoo Knight", "Depraved Perfumer", "Drake Knight", "Duelist", "Eccentric", "Elden Lord", "Errant Sorcerer", "Exile", "Festive", "Fia", "Fingerprint", "Finger Maiden", "Fire Monk", "Fire Prelate", "Fur", "Gelmir", "Godrick Foot Soldier", "Godrick Knight", "Godrick Soldier", "Godskin Apostle", "Godskin Noble", "Goldmask", "Guardian", "Guilty", "Haligtree", "Haligtree Foot Soldier", "Haligtree Knight", "Highwayman", "High Page", "Hoslow", "Iron", "Juvenile Scholar", "Kaiden", "Knight", "Lazuli Sorcerer", "Leather", "Leyndell Foot Soldier", "Leyndell Knight", "Leyndell Soldier", "Lionel", "Lusat", "Malenia", "Malformed Dragon", "Maliketh", "Marais", "Marionette Soldier", "Mausoleum Foot Soldier", "Mausoleum Knight", "Mausoleum Soldier", "Melinas", "Mushroom", "Night Cavalry", "Night Maiden", "Noble", "Nomadic Merchant", "Nox Monk", "Nox Swordstress", "Old Aristocrat", "Omen", "Omenkiller", "Page", "Perfumer", "Preceptor", "Prisoner", "Prophet", "Queen", "Radahn", "Radahn Foot Soldier", "Radahn Soldier", "Raptor", "Raya Lucarian Foot Soldier", "Raya Lucarian Soldier", "Raya Lucarian Sorcerer", "Redmane Knight", "Ronin", "Rotten Duelist", "Royal Knight", "Royal Remains", "Ruler", "Sage", "Samurai", "Sanguine Noble", "Scaled", "Shaman", "Snow Witch", "Spellblade", "Traveler", "Travelling Maiden", "Tree Sentinel", "Twinned", "Vagabond Knight", "Veteran", "Vulgar Militia", "War Surgeon", "White Reed", "Zamor"];
+			let buildpic = document.querySelector("#buildPic");
+			for(let i = 0; i < piclist.length; i++) {
+				if(piclist[i] == "Radahn") {
+					buildpic.appendChild(htmlToElement(`<option selected value="${piclist[i]}">${piclist[i]}</option>`));
+				} else {
+					buildpic.appendChild(htmlToElement(`<option value="${piclist[i]}">${piclist[i]}</option>`));
+				}
+			}
 
 			buttons.forEach((button) => {
 				button.style.display = "block";
@@ -593,7 +583,7 @@ rhit.BuildPageController = class {
  
 			document.querySelector("#saveBuild").onclick = (event) => {
 				let build = rhit.buildValuesManager.getCurrentBuild();
-				console.log(build);
+				// console.log(build);
 				rhit.fbSingleBuildManager.update(build).then(() => {
 					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
 				});
@@ -621,14 +611,25 @@ rhit.CreatePageController = class {
 		
 		if (!rhit.fbAuthManager.isSignedIn) {
 			document.getElementById("saveBuild").style.display = "none";
+			document.querySelector("#buildproperties").hidden = true;
 		} else {
 			document.querySelector("#saveBuild").onclick = (event) => {
 				let build = rhit.buildValuesManager.getCurrentBuild();
-				console.log(build);
+				// console.log(build);
 				rhit.fbUserBuildsManager.add(build).then(() => {
 					window.location.href = `/userpage.html?uid=${rhit.fbAuthManager.uid}`;
 				});
 			}
+			let piclist = ["Alberich", "Albinauric", "All Knowing", "Aristocrat", "Astrologer", "Azur", "Bandit", "Banished Knight", "Battlemage", "Beast Champion", "Blackflame Monk", "Black Knife", "Blaidd", "Bloodhound", "Bloodsoaked", "Bloody Wolf", "Blue Cloth", "Blue Festive", "Blue Silver", "Briar", "Bullgate", "Carian Knight", "Chain", "Champion", "Cleanrot", "Commoner", "Confessor", "Consort", "Crucible Knight", "Crucible Tree", "Cuckoo Knight", "Depraved Perfumer", "Drake Knight", "Duelist", "Eccentric", "Elden Lord", "Errant Sorcerer", "Exile", "Festive", "Fia", "Fingerprint", "Finger Maiden", "Fire Monk", "Fire Prelate", "Fur", "Gelmir", "Godrick Foot Soldier", "Godrick Knight", "Godrick Soldier", "Godskin Apostle", "Godskin Noble", "Goldmask", "Guardian", "Guilty", "Haligtree", "Haligtree Foot Soldier", "Haligtree Knight", "Highwayman", "High Page", "Hoslow", "Iron", "Juvenile Scholar", "Kaiden", "Knight", "Lazuli Sorcerer", "Leather", "Leyndell Foot Soldier", "Leyndell Knight", "Leyndell Soldier", "Lionel", "Lusat", "Malenia", "Malformed Dragon", "Maliketh", "Marais", "Marionette Soldier", "Mausoleum Foot Soldier", "Mausoleum Knight", "Mausoleum Soldier", "Melinas", "Mushroom", "Night Cavalry", "Night Maiden", "Noble", "Nomadic Merchant", "Nox Monk", "Nox Swordstress", "Old Aristocrat", "Omen", "Omenkiller", "Page", "Perfumer", "Preceptor", "Prisoner", "Prophet", "Queen", "Radahn", "Radahn Foot Soldier", "Radahn Soldier", "Raptor", "Raya Lucarian Foot Soldier", "Raya Lucarian Soldier", "Raya Lucarian Sorcerer", "Redmane Knight", "Ronin", "Rotten Duelist", "Royal Knight", "Royal Remains", "Ruler", "Sage", "Samurai", "Sanguine Noble", "Scaled", "Shaman", "Snow Witch", "Spellblade", "Traveler", "Travelling Maiden", "Tree Sentinel", "Twinned", "Vagabond Knight", "Veteran", "Vulgar Militia", "War Surgeon", "White Reed", "Zamor"];
+			let buildpic = document.querySelector("#buildPic");
+			for(let i = 0; i < piclist.length; i++) {
+				if(piclist[i] == "Radahn") {
+					buildpic.appendChild(htmlToElement(`<option selected value="${piclist[i]}">${piclist[i]}</option>`));
+				} else {
+					buildpic.appendChild(htmlToElement(`<option value="${piclist[i]}">${piclist[i]}</option>`));
+				}
+			}
+			document.querySelector("#buildproperties").hidden = false;
 		}
 		
 	}
@@ -653,8 +654,8 @@ rhit.MainPageController = class {
 	}
 
 	updateList() {
-		console.log("Updating List");
-		console.log(`Num Builds: ${rhit.fbPublicBuildsManager.length}`);
+		// console.log("Updating List");
+		// console.log(`Num Builds: ${rhit.fbPublicBuildsManager.length}`);
 
 		const newList = htmlToElement('<div id="buildListContainer"></div>');
 
@@ -662,15 +663,14 @@ rhit.MainPageController = class {
 			const build = rhit.fbPublicBuildsManager.getBuildAtIndex(i);
 			const card = this._createCard(build);
 			let pic = "Radahn";
-			if(build.pic != null) {
+			if(build.pic != null && build.pic != "") {
 				pic = build.pic;
 			}
 			card.style.background = `url("../images/sets/${pic}.png") top center no-repeat, rgba(0, 0, 0, 0.8)`;
 			card.style.backgroundSize = "250px";
 
 			card.onclick = (event) => {
-				//TODO: some other stuff here maybe
-				console.log(`You clicked a card: ${build.id}`);
+				// console.log(`You clicked a card: ${build.id}`);
 				window.location.href = `/build.html?id=${build.id}`;
 				sessionStorage.setItem("isPublicList", "true");
 			};
@@ -815,7 +815,7 @@ rhit.FbUserManager = class {
 		this._collectionRef = firebase.firestore().collection("Users");
 		this._document = null;
 		this._unsubscribe = null;
-		console.log("Made user manager");
+		// console.log("Made user manager");
 	}
 	addNewUserMaybe(uid, name, photoUrl) {
 		const userRef = this._collectionRef.doc(uid);
@@ -823,25 +823,25 @@ rhit.FbUserManager = class {
 		return new Promise((resolve, reject) => {
 			userRef.get().then((doc) => {
 				if (doc.exists) {
-					console.log("User already exists: ", doc.data());
+					// console.log("User already exists: ", doc.data());
 				} else {
-					console.log("Creating user!");
+					// console.log("Creating user!");
 
 						userRef.set({
 							"name": name,
 							"photoURL": photoUrl
 						})
 						.then(function () {
-							console.log("Doc written");
+							// console.log("Doc written");
 						})
 						.catch(function (error) {
-							console.log("Error writing doc: ", error);
+							// console.log("Error writing doc: ", error);
 							reject();
 						});
 				}
 			})
 			.catch((err) => {
-				console.log("Error: ", err);
+				// console.log("Error: ", err);
 				reject();
 			});
 			resolve();
@@ -885,14 +885,14 @@ rhit.main = function () {
 	rhit.fbUserManager = new rhit.FbUserManager();
 
 	rhit.fbAuthManager.beginListening((params) => {
-		console.log("isSignedIn: ", rhit.fbAuthManager.isSignedIn);
+		// console.log("isSignedIn: ", rhit.fbAuthManager.isSignedIn);
 
 		rhit.createUserObjectIfNeeded().then((params) => {
 			rhit.initializePage();
 		});
 	});
 
-	console.log("Ready");
+	// console.log("Ready");
 
 };
 
